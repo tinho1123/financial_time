@@ -1,0 +1,72 @@
+export type TransactionType = 'income' | 'expense';
+export type AccountType = 'checking' | 'savings' | 'cash' | 'credit' | 'investment';
+export type PlanInterval = 'free' | 'monthly' | 'annual';
+
+export type Plan = {
+    id: number;
+    slug: string;
+    name: string;
+    price_in_cents: number;
+    promo_price_in_cents: number | null;
+    promo_months: number | null;
+    interval: PlanInterval;
+    max_accounts: number | null;
+    max_categories: number | null;
+    has_advanced_charts: boolean;
+    stripe_price_id: string | null;
+    stripe_promo_price_id: string | null;
+};
+
+export type Category = {
+    id: number;
+    user_id: number;
+    name: string;
+    type: TransactionType;
+    color: string;
+};
+
+export type Account = {
+    id: number;
+    user_id: number;
+    name: string;
+    type: AccountType;
+    initial_balance_in_cents: number;
+    current_balance_in_cents: number;
+};
+
+export type Transaction = {
+    id: number;
+    user_id: number;
+    account_id: number;
+    category_id: number | null;
+    type: TransactionType;
+    amount_in_cents: number;
+    previous_balance_in_cents: number;
+    current_balance_in_cents: number;
+    description: string;
+    date: string;
+    notes: string | null;
+    account?: Account;
+    category?: Category | null;
+};
+
+export type MonthlySummary = {
+    month: string;
+    income_in_cents: number;
+    expense_in_cents: number;
+};
+
+export type CategoryBreakdown = {
+    category_name: string;
+    color: string;
+    total_in_cents: number;
+    percentage: number;
+};
+
+export type PaginatedTransactions = {
+    data: Transaction[];
+    current_page: number;
+    last_page: number;
+    total: number;
+    links: { url: string | null; label: string; active: boolean }[];
+};
