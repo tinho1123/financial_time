@@ -34,10 +34,13 @@ class TransactionController extends Controller
             ->paginate(20)
             ->withQueryString();
 
+        $categories = $user->categories()->orderBy('name')->get();
+
         return Inertia::render('transactions/index', [
             'transactions' => $transactions,
             'filters' => $filters,
-            'categories' => $user->categories()->orderBy('name')->get(),
+            'incomeCategories' => $categories->where('type', 'income')->values(),
+            'expenseCategories' => $categories->where('type', 'expense')->values(),
             'accounts' => $user->accounts()->orderBy('name')->get(),
         ]);
     }

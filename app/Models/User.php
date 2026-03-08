@@ -26,6 +26,7 @@ class User extends Authenticatable
         'email',
         'password',
         'plan_id',
+        'plan_expires_at',
     ];
 
     /**
@@ -51,6 +52,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
+            'plan_expires_at' => 'datetime',
         ];
     }
 
@@ -76,7 +78,9 @@ class User extends Authenticatable
 
     public function onPaidPlan(): bool
     {
-        return $this->subscribed();
+        return $this->plan
+            && $this->plan->has_advanced_charts
+            && ($this->plan_expires_at === null || $this->plan_expires_at->isFuture());
     }
 
     public function canAddAccount(): bool

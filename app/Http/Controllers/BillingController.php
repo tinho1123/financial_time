@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PixPayment;
 use App\Models\Plan;
+use App\Services\MercadoPagoService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -10,6 +13,8 @@ use Inertia\Response;
 
 class BillingController extends Controller
 {
+    public function __construct(private readonly MercadoPagoService $mercadoPagoService) {}
+
     public function index(Request $request): Response
     {
         $user = $request->user();
@@ -18,8 +23,8 @@ class BillingController extends Controller
         return Inertia::render('billing/index', [
             'plans' => $plans,
             'currentPlan' => $user->plan,
-            'isSubscribed' => $user->subscribed(),
-            'onGracePeriod' => $user->subscribed() && $user->subscription()->onGracePeriod(),
+            'planExpiresAt' => $user->plan_expires_at?->toDateString(),
+            'isPaidPlan' => $user->onPaidPlan(),
         ]);
     }
 
@@ -31,40 +36,59 @@ class BillingController extends Controller
             return back()->withErrors(['plan' => 'Plano gratuito não requer checkout.']);
         }
 
-        if ($plan->promo_price_in_cents && $plan->stripe_promo_price_id && $plan->stripe_price_id) {
-            $checkout = $user->newSubscription('default', $plan->stripe_promo_price_id)
-                ->anchorBillingCycleOn(now()->startOfMonth())
-                ->checkout([
-                    'success_url' => route('billing.success'),
-                    'cancel_url' => route('billing.index'),
-                ]);
-        } else {
-            $checkout = $user->newSubscription('default', $plan->stripe_price_id)
-                ->checkout([
-                    'success_url' => route('billing.success'),
-                    'cancel_url' => route('billing.index'),
-                ]);
+        $result = $this->mercadoPagoService->createPixPayment($user, $plan);
+
+        if (empty($result['id']) || empty($result['point_of_interaction']['transaction_data']['qr_code'])) {
+            return back()->withErrors(['plan' => 'Erro ao gerar o PIX. Tente novamente.']);
         }
 
-        return redirect($checkout->url);
+        $pixPayment = PixPayment::query()->create([
+            'user_id' => $user->id,
+            'plan_id' => $plan->id,
+            'mp_payment_id' => (string) $result['id'],
+            'amount_in_cents' => $plan->price_in_cents,
+            'status' => 'pending',
+            'qr_code' => $result['point_of_interaction']['transaction_data']['qr_code'],
+            'expires_at' => now()->addMinutes(30),
+        ]);
+
+        return redirect()->route('billing.payment', $pixPayment);
     }
 
-    public function success(Request $request): Response
+    public function payment(Request $request, PixPayment $pixPayment): Response|RedirectResponse
     {
-        $user = $request->user();
-
-        if ($user->subscribed()) {
-            $plan = Plan::query()->where('slug', '!=', 'free')->first();
-            if ($plan) {
-                $user->update(['plan_id' => $plan->id]);
-            }
+        if ($pixPayment->user_id !== $request->user()->id) {
+            abort(403);
         }
 
+        if ($pixPayment->status === 'paid') {
+            return redirect()->route('billing.success');
+        }
+
+        return Inertia::render('billing/payment', [
+            'pixPayment' => [
+                'id' => $pixPayment->id,
+                'qr_code' => $pixPayment->qr_code,
+                'amount_in_cents' => $pixPayment->amount_in_cents,
+                'expires_at' => $pixPayment->expires_at->toIso8601String(),
+                'plan_name' => $pixPayment->plan->name,
+            ],
+        ]);
+    }
+
+    public function paymentStatus(Request $request, PixPayment $pixPayment): JsonResponse
+    {
+        if ($pixPayment->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        $status = $pixPayment->isExpired() ? 'expired' : $pixPayment->status;
+
+        return response()->json(['status' => $status]);
+    }
+
+    public function success(): Response
+    {
         return Inertia::render('billing/success');
-    }
-
-    public function portal(Request $request): RedirectResponse
-    {
-        return $request->user()->redirectToBillingPortal(route('billing.index'));
     }
 }

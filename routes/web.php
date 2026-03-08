@@ -4,11 +4,11 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PixWebhookController;
 use App\Http\Controllers\TransactionController;
 use App\Models\Plan;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use Laravel\Cashier\Http\Controllers\WebhookController;
 use Laravel\Fortify\Features;
 
 Route::get('/', function () {
@@ -28,11 +28,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('billing')->name('billing.')->group(function () {
         Route::get('/', [BillingController::class, 'index'])->name('index');
         Route::post('checkout/{plan}', [BillingController::class, 'checkout'])->name('checkout');
+        Route::get('payment/{pixPayment}', [BillingController::class, 'payment'])->name('payment');
+        Route::get('payment-status/{pixPayment}', [BillingController::class, 'paymentStatus'])->name('payment-status');
         Route::get('success', [BillingController::class, 'success'])->name('success');
-        Route::get('portal', [BillingController::class, 'portal'])->name('portal');
     });
 });
 
-Route::post('stripe/webhook', [WebhookController::class, 'handleWebhook'])->name('cashier.webhook');
+Route::post('/pix/webhook', [PixWebhookController::class, 'handle'])->name('pix.webhook');
 
 require __DIR__.'/settings.php';

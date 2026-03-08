@@ -1,6 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import { Head } from '@inertiajs/react';
-import { CheckCircle2, ExternalLink } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,8 +12,8 @@ import type { BreadcrumbItem, Plan } from '@/types';
 interface BillingPageProps {
     plans: Plan[];
     currentPlan: Plan | null;
-    isSubscribed: boolean;
-    onGracePeriod: boolean;
+    planExpiresAt: string | null;
+    isPaidPlan: boolean;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -23,13 +23,11 @@ const breadcrumbs: BreadcrumbItem[] = [
 function PlanCard({
     plan,
     currentPlan,
-    isSubscribed,
-    onGracePeriod,
+    isPaidPlan,
 }: {
     plan: Plan;
     currentPlan: Plan | null;
-    isSubscribed: boolean;
-    onGracePeriod: boolean;
+    isPaidPlan: boolean;
 }) {
     const { post, processing } = useForm();
     const isCurrent = currentPlan?.id === plan.id;
@@ -43,10 +41,6 @@ function PlanCard({
 
     function handleCheckout() {
         post(billingRoute.checkout.url(plan.id));
-    }
-
-    function handlePortal() {
-        window.location.href = billingRoute.portal.url();
     }
 
     return (
@@ -114,23 +108,16 @@ function PlanCard({
 
             <CardFooter>
                 {isFree ? (
-                    isCurrent && !isSubscribed ? (
-                        <Button variant="outline" className="w-full" disabled>
-                            Plano atual
-                        </Button>
-                    ) : (
-                        <Button variant="outline" className="w-full" disabled>
-                            Grátis
-                        </Button>
-                    )
-                ) : isCurrent && isSubscribed ? (
-                    <Button variant="outline" className="w-full" onClick={handlePortal}>
-                        <ExternalLink className="size-4" />
-                        Gerenciar assinatura
+                    <Button variant="outline" className="w-full" disabled>
+                        {isCurrent && !isPaidPlan ? 'Plano atual' : 'Grátis'}
+                    </Button>
+                ) : isCurrent && isPaidPlan ? (
+                    <Button variant="outline" className="w-full" disabled>
+                        Plano atual
                     </Button>
                 ) : (
                     <Button className="w-full" onClick={handleCheckout} disabled={processing}>
-                        {onGracePeriod ? 'Reativar' : 'Assinar'}
+                        Assinar via PIX
                     </Button>
                 )}
             </CardFooter>
@@ -138,7 +125,7 @@ function PlanCard({
     );
 }
 
-export default function BillingIndex({ plans, currentPlan, isSubscribed, onGracePeriod }: BillingPageProps) {
+export default function BillingIndex({ plans, currentPlan, planExpiresAt, isPaidPlan }: BillingPageProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Cobrança" />
@@ -148,9 +135,13 @@ export default function BillingIndex({ plans, currentPlan, isSubscribed, onGrace
                     <p className="text-sm text-muted-foreground">Escolha o plano ideal para você.</p>
                 </div>
 
-                {onGracePeriod && (
-                    <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800/40 dark:bg-amber-900/20 dark:text-amber-300">
-                        Sua assinatura foi cancelada mas ainda está ativa até o final do período pago.
+                {isPaidPlan && planExpiresAt && (
+                    <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-800/40 dark:bg-emerald-900/20 dark:text-emerald-300">
+                        Seu plano está ativo até{' '}
+                        <span className="font-medium">
+                            {new Date(planExpiresAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                        </span>
+                        .
                     </div>
                 )}
 
@@ -160,8 +151,7 @@ export default function BillingIndex({ plans, currentPlan, isSubscribed, onGrace
                             key={plan.id}
                             plan={plan}
                             currentPlan={currentPlan}
-                            isSubscribed={isSubscribed}
-                            onGracePeriod={onGracePeriod}
+                            isPaidPlan={isPaidPlan}
                         />
                     ))}
                 </div>

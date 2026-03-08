@@ -13,8 +13,6 @@ export type Plan = {
     max_accounts: number | null;
     max_categories: number | null;
     has_advanced_charts: boolean;
-    stripe_price_id: string | null;
-    stripe_promo_price_id: string | null;
 };
 
 export type Category = {
@@ -61,6 +59,14 @@ export type CategoryBreakdown = {
     color: string;
     total_in_cents: number;
     percentage: number;
+};
+
+export type PixPayment = {
+    id: number;
+    qr_code: string;
+    amount_in_cents: number;
+    expires_at: string;
+    plan_name: string;
 };
 
 export type PaginatedTransactions = {

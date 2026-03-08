@@ -2,8 +2,11 @@ import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { registerSW } from 'virtual:pwa-register';
 import '../css/app.css';
 import { initializeTheme } from '@/hooks/use-appearance';
+
+registerSW({ immediate: true });
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
