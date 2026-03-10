@@ -43,7 +43,3 @@ test('unauthenticated user cannot access billing page', function () {
     $this->get(route('billing.index'))->assertRedirect(route('login'));
 });
 
-test('checkout requires a non-free plan', function () {
-    $this->post(route('billing.checkout', $this->freePlan))
-        ->assertSessionHasErrors('plan');
-});

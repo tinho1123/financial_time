@@ -14,7 +14,7 @@ class MercadoPagoService
 
     public function __construct()
     {
-        $this->accessToken = config('services.mercadopago.access_token', '');
+        $this->accessToken = config('services.mercadopago.access_token') ?? '';
     }
 
     /** @return array<string, mixed> */
