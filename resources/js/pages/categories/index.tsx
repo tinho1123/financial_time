@@ -10,7 +10,6 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from '@/components/ui/dialog';
 import AppLayout from '@/layouts/app-layout';
 import categories from '@/routes/categories';
