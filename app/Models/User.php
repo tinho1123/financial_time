@@ -78,9 +78,14 @@ class User extends Authenticatable
 
     public function onPaidPlan(): bool
     {
+        if ($this->subscribed('default')) {
+            return true;
+        }
+
         return $this->plan
             && $this->plan->has_advanced_charts
-            && ($this->plan_expires_at === null || $this->plan_expires_at->isFuture());
+            && $this->plan_expires_at !== null
+            && $this->plan_expires_at->isFuture();
     }
 
     public function canAddAccount(): bool

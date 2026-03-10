@@ -13,6 +13,7 @@ export type Plan = {
     max_accounts: number | null;
     max_categories: number | null;
     has_advanced_charts: boolean;
+    has_stripe_checkout: boolean;
 };
 
 export type Category = {

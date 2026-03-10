@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PlanInterval;
 use App\Models\PixPayment;
 use App\Models\Plan;
 use App\Services\MercadoPagoService;
@@ -21,10 +22,13 @@ class BillingController extends Controller
         $plans = Plan::query()->orderBy('price_in_cents')->get();
 
         return Inertia::render('billing/index', [
-            'plans' => $plans,
+            'plans' => $plans->map(fn (Plan $plan) => array_merge($plan->toArray(), [
+                'has_stripe_checkout' => ! empty($plan->stripe_price_id),
+            ])),
             'currentPlan' => $user->plan,
             'planExpiresAt' => $user->plan_expires_at?->toDateString(),
             'isPaidPlan' => $user->onPaidPlan(),
+            'isStripeSubscriber' => $user->subscribed('default'),
         ]);
     }
 
@@ -32,7 +36,7 @@ class BillingController extends Controller
     {
         $user = $request->user();
 
-        if ($plan->interval->value === 'free') {
+        if ($plan->interval === PlanInterval::Free) {
             return back()->withErrors(['plan' => 'Plano gratuito não requer checkout.']);
         }
 
@@ -85,6 +89,34 @@ class BillingController extends Controller
         $status = $pixPayment->isExpired() ? 'expired' : $pixPayment->status;
 
         return response()->json(['status' => $status]);
+    }
+
+    public function stripeCheckout(Request $request, Plan $plan): RedirectResponse|\Symfony\Component\HttpFoundation\Response
+    {
+        $user = $request->user();
+
+        if ($plan->interval === PlanInterval::Free) {
+            return back()->withErrors(['plan' => 'Plano gratuito não requer checkout.']);
+        }
+
+        if (empty($plan->stripe_price_id)) {
+            return back()->withErrors(['plan' => 'Este plano não está disponível para pagamento com cartão.']);
+        }
+
+        if ($user->subscribed('default')) {
+            return $user->redirectToBillingPortal(route('billing.index'));
+        }
+
+        return $user->newSubscription('default', $plan->stripe_price_id)
+            ->checkout([
+                'success_url' => route('billing.success'),
+                'cancel_url' => route('billing.index'),
+            ]);
+    }
+
+    public function portal(Request $request): RedirectResponse
+    {
+        return $request->user()->redirectToBillingPortal(route('billing.index'));
     }
 
     public function success(): Response

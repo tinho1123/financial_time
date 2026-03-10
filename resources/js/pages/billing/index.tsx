@@ -1,6 +1,6 @@
-import { useForm } from '@inertiajs/react';
+import { router, useForm } from '@inertiajs/react';
 import { Head } from '@inertiajs/react';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, CreditCard, QrCode } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +14,7 @@ interface BillingPageProps {
     currentPlan: Plan | null;
     planExpiresAt: string | null;
     isPaidPlan: boolean;
+    isStripeSubscriber: boolean;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -24,10 +25,12 @@ function PlanCard({
     plan,
     currentPlan,
     isPaidPlan,
+    isStripeSubscriber,
 }: {
     plan: Plan;
     currentPlan: Plan | null;
     isPaidPlan: boolean;
+    isStripeSubscriber: boolean;
 }) {
     const { post, processing } = useForm();
     const isCurrent = currentPlan?.id === plan.id;
@@ -39,9 +42,19 @@ function PlanCard({
         annual: ['Contas ilimitadas', 'Categorias ilimitadas', 'Transações ilimitadas', 'Gráfico histórico (6 meses)', 'Breakdown por categoria', 'Melhor custo-benefício'],
     };
 
-    function handleCheckout() {
+    function handlePixCheckout() {
         post(billingRoute.checkout.url(plan.id));
     }
+
+    function handleStripeCheckout() {
+        post(billingRoute.stripe.url(plan.id));
+    }
+
+    function handlePortal() {
+        router.get(billingRoute.portal.url());
+    }
+
+    const isCurrentAndPaid = isCurrent && isPaidPlan;
 
     return (
         <Card className={`flex flex-col ${isCurrent ? 'border-primary ring-2 ring-primary' : ''}`}>
@@ -106,26 +119,40 @@ function PlanCard({
                 </ul>
             </CardContent>
 
-            <CardFooter>
+            <CardFooter className="flex flex-col gap-2">
                 {isFree ? (
                     <Button variant="outline" className="w-full" disabled>
                         {isCurrent && !isPaidPlan ? 'Plano atual' : 'Grátis'}
                     </Button>
-                ) : isCurrent && isPaidPlan ? (
+                ) : isCurrentAndPaid && isStripeSubscriber ? (
+                    <Button variant="outline" className="w-full" onClick={handlePortal}>
+                        <CreditCard className="mr-2 size-4" />
+                        Gerenciar assinatura
+                    </Button>
+                ) : isCurrentAndPaid ? (
                     <Button variant="outline" className="w-full" disabled>
-                        Plano atual
+                        Plano ativo
                     </Button>
                 ) : (
-                    <Button className="w-full" onClick={handleCheckout} disabled={processing}>
-                        Assinar via PIX
-                    </Button>
+                    <>
+                        <Button className="w-full" onClick={handlePixCheckout} disabled={processing}>
+                            <QrCode className="mr-2 size-4" />
+                            Pagar via PIX
+                        </Button>
+                        {plan.has_stripe_checkout && (
+                            <Button variant="outline" className="w-full" onClick={handleStripeCheckout} disabled={processing}>
+                                <CreditCard className="mr-2 size-4" />
+                                Pagar com Cartão
+                            </Button>
+                        )}
+                    </>
                 )}
             </CardFooter>
         </Card>
     );
 }
 
-export default function BillingIndex({ plans, currentPlan, planExpiresAt, isPaidPlan }: BillingPageProps) {
+export default function BillingIndex({ plans, currentPlan, planExpiresAt, isPaidPlan, isStripeSubscriber }: BillingPageProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Cobrança" />
@@ -145,6 +172,12 @@ export default function BillingIndex({ plans, currentPlan, planExpiresAt, isPaid
                     </div>
                 )}
 
+                {isPaidPlan && isStripeSubscriber && (
+                    <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 dark:border-blue-800/40 dark:bg-blue-900/20 dark:text-blue-300">
+                        Assinatura ativa via cartão — renovação automática.
+                    </div>
+                )}
+
                 <div className="grid gap-4 md:grid-cols-3">
                     {plans.map((plan) => (
                         <PlanCard
@@ -152,6 +185,7 @@ export default function BillingIndex({ plans, currentPlan, planExpiresAt, isPaid
                             plan={plan}
                             currentPlan={currentPlan}
                             isPaidPlan={isPaidPlan}
+                            isStripeSubscriber={isStripeSubscriber}
                         />
                     ))}
                 </div>
