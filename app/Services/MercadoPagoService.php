@@ -30,7 +30,7 @@ class MercadoPagoService
                 'description' => "Plano {$plan->name} - Financial Time",
                 'payment_method_id' => 'pix',
                 'date_of_expiration' => now()->addMinutes(30)->format('Y-m-d\TH:i:s.000P'),
-                'notification_url' => route('pix.webhook'),
+                'notification_url' => config('services.mercadopago.webhook_url') ?: route('pix.webhook'),
                 'payer' => [
                     'email' => $user->email,
                     'first_name' => $nameParts[0],
