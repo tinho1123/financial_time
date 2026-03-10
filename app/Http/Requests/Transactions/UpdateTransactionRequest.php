@@ -23,4 +23,20 @@ class UpdateTransactionRequest extends FormRequest
             'notes' => ['nullable', 'string', 'max:1000'],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'type.required' => 'Selecione o tipo da transação.',
+            'type.in' => 'Tipo inválido.',
+            'amount_in_cents.required' => 'Informe o valor.',
+            'amount_in_cents.integer' => 'O valor deve ser um número válido.',
+            'amount_in_cents.min' => 'O valor deve ser maior que zero.',
+            'description.required' => 'Informe a descrição.',
+            'description.max' => 'A descrição deve ter no máximo 255 caracteres.',
+            'date.required' => 'Informe a data.',
+            'date.date' => 'Data inválida.',
+            'notes.max' => 'As observações devem ter no máximo 1000 caracteres.',
+        ];
+    }
 }
