@@ -13,14 +13,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-
-      - name: Install Composer dependencies
-        run: composer install --no-dev --optimize-autoloader --no-interaction
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -33,14 +25,14 @@ jobs:
       - name: Build assets
         run: npm run build
 
-      - name: Upload application files to Hostinger
+      - name: Upload built assets to Hostinger
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
-          source: "app/,bootstrap/,config/,database/,public/,resources/,routes/,storage/,tests/,vendor/,artisan,composer.json,composer.lock"
+          source: "public/build/"
           target: "/home/u968588512/domains/financialtime.me/financial_time/"
 
       - name: Run post-deploy commands
