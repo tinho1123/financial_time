@@ -68,8 +68,8 @@ class DashboardController extends Controller
         $results = Transaction::query()
             ->where('user_id', $userId)
             ->where('date', '>=', Carbon::now()->subMonths(5)->startOfMonth())
-            ->selectRaw("to_char(date, 'YYYY-MM') as month, type, SUM(amount_in_cents) as total")
-            ->groupByRaw("to_char(date, 'YYYY-MM'), type")
+            ->selectRaw("DATE_FORMAT(date, '%Y-%m') as month, type, SUM(amount_in_cents) as total")
+            ->groupByRaw("DATE_FORMAT(date, '%Y-%m'), type")
             ->get()
             ->groupBy('month');
 

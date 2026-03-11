@@ -56,6 +56,17 @@ class User extends Authenticatable
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::creating(function (User $user): void {
+            if (is_null($user->plan_id)) {
+                $user->plan_id = Plan::query()
+                    ->where('interval', 'free')
+                    ->value('id');
+            }
+        });
+    }
+
     public function plan(): BelongsTo
     {
         return $this->belongsTo(Plan::class);

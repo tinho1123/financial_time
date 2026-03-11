@@ -107,11 +107,18 @@ class BillingController extends Controller
             return $user->redirectToBillingPortal(route('billing.index'));
         }
 
-        return $user->newSubscription('default', $plan->stripe_price_id)
-            ->checkout([
-                'success_url' => route('billing.success'),
-                'cancel_url' => route('billing.index'),
-            ]);
+        $subscription = $user->newSubscription('default', $plan->stripe_price_id);
+
+        if ($plan->stripe_promo_price_id) {
+            $subscription->withCoupon($plan->stripe_promo_price_id);
+        }
+
+        $checkout = $subscription->checkout([
+            'success_url' => route('billing.success'),
+            'cancel_url' => route('billing.index'),
+        ])->toResponse($request);
+
+        return Inertia::location($checkout->getTargetUrl());
     }
 
     public function portal(Request $request): RedirectResponse

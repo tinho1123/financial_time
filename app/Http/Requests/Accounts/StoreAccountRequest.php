@@ -12,6 +12,15 @@ class StoreAccountRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('initial_balance_in_cents')) {
+            $this->merge([
+                'initial_balance_in_cents' => (int) round((float) str_replace(',', '.', $this->initial_balance_in_cents) * 100),
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         return [

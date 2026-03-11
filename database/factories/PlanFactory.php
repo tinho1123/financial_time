@@ -51,7 +51,7 @@ class PlanFactory extends Factory
         return $this->state([
             'name' => 'Anual',
             'slug' => 'annual',
-            'price_in_cents' => 12000,
+            'price_in_cents' => 11999,
             'promo_price_in_cents' => null,
             'promo_months' => null,
             'interval' => 'annual',
