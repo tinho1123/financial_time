@@ -33,15 +33,16 @@ jobs:
       - name: Build assets
         run: npm run build
 
-      - name: Upload built assets to Hostinger
-        uses: appleboy/scp-action@v0.1.7
+      - name: Deploy files to Hostinger
+        uses: burnett01/rsync-deployments@7.0.1
         with:
-          host: ${{ secrets.SSH_HOST }}
-          port: ${{ secrets.SSH_PORT }}
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          source: "public/build/"
-          target: "/home/u968588512/domains/financialtime.me/financial_time/"
+          switches: -avz --delete --exclude='.env' --exclude='storage/' --exclude='.git/'
+          path: ./
+          remote_path: /home/u968588512/domains/financialtime.me/financial_time/
+          remote_host: ${{ secrets.SSH_HOST }}
+          remote_port: ${{ secrets.SSH_PORT }}
+          remote_user: ${{ secrets.SSH_USER }}
+          remote_password: ${{ secrets.SSH_PASSWORD }}
 
       - name: Run post-deploy commands
         uses: appleboy/ssh-action@v1.0.3
