@@ -33,14 +33,14 @@ jobs:
       - name: Build assets
         run: npm run build
 
-      - name: Upload built assets to Hostinger
+      - name: Upload application files to Hostinger
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
-          source: "public/build/"
+          source: "app/,bootstrap/,config/,database/,public/,resources/,routes/,storage/,tests/,vendor/,artisan,composer.json,composer.lock"
           target: "/home/u968588512/domains/financialtime.me/financial_time/"
 
       - name: Run post-deploy commands
