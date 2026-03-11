@@ -33,18 +33,6 @@ jobs:
       - name: Build assets
         run: npm run build
 
-      - name: Deploy PHP files via git pull
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          port: ${{ secrets.SSH_PORT }}
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          script: |
-            ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
-            cd ~/domains/financialtime.me/financial_time
-            git pull origin main
-
       - name: Upload built assets to Hostinger
         uses: appleboy/scp-action@v0.1.7
         with:
