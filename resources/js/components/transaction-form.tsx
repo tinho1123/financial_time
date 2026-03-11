@@ -26,7 +26,7 @@ export function TransactionForm({
         type: transaction?.type ?? 'expense',
         account_id: transaction?.account_id ?? (accounts[0]?.id ?? ''),
         category_id: transaction?.category_id ?? '',
-        amount: transaction ? (transaction.amount_in_cents / 100).toFixed(2) : '',
+        amount_in_cents: transaction ? (transaction.amount_in_cents / 100).toFixed(2) : '',
         description: transaction?.description ?? '',
         date: transaction?.date ?? new Date().toISOString().slice(0, 10),
         notes: transaction?.notes ?? '',
@@ -37,23 +37,10 @@ export function TransactionForm({
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
 
-        const payload = {
-            ...data,
-            amount_in_cents: Math.round(parseFloat(data.amount as string) * 100),
-            category_id: data.category_id || null,
-            account_id: Number(data.account_id),
-        };
-
         if (isEditing && transaction) {
-            put(transactions.update.url(transaction.id), {
-                data: payload,
-                onSuccess: () => onSuccess?.(),
-            });
+            put(transactions.update.url(transaction.id), { onSuccess: () => onSuccess?.() });
         } else {
-            post(transactions.store.url(), {
-                data: payload,
-                onSuccess: () => onSuccess?.(),
-            });
+            post(transactions.store.url(), { onSuccess: () => onSuccess?.() });
         }
     }
 
@@ -104,14 +91,14 @@ export function TransactionForm({
                 </div>
 
                 <div className="space-y-1.5">
-                    <Label htmlFor="tx-amount">Valor (R$)</Label>
+                    <Label htmlFor="tx-amount">Valor</Label>
                     <Input
                         id="tx-amount"
                         type="number"
                         min="0.01"
                         step="0.01"
-                        value={data.amount}
-                        onChange={(e) => setData('amount', e.target.value)}
+                        value={data.amount_in_cents}
+                        onChange={(e) => setData('amount_in_cents', e.target.value)}
                         placeholder="0,00"
                         aria-invalid={Boolean(errors.amount_in_cents)}
                     />

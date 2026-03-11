@@ -12,6 +12,15 @@ class StoreTransactionRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('amount_in_cents')) {
+            $this->merge([
+                'amount_in_cents' => (int) round((float) str_replace(',', '.', $this->amount_in_cents) * 100),
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         return [

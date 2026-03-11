@@ -46,28 +46,17 @@ function AccountForm({ account, onSuccess }: AccountFormProps) {
     const { data, setData, post, put, processing, errors } = useForm({
         name: account?.name ?? '',
         type: account?.type ?? 'checking',
+        currency: account?.currency ?? 'BRL',
         initial_balance_in_cents: account ? (account.initial_balance_in_cents / 100).toFixed(2) : '0.00',
     });
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
 
-        const payload = {
-            name: data.name,
-            type: data.type,
-            initial_balance_in_cents: Math.round(parseFloat(data.initial_balance_in_cents as string) * 100),
-        };
-
         if (isEditing && account) {
-            put(accountsRoute.update.url(account.id), {
-                data: payload,
-                onSuccess: () => onSuccess?.(),
-            });
+            put(accountsRoute.update.url(account.id), { onSuccess: () => onSuccess?.() });
         } else {
-            post(accountsRoute.store.url(), {
-                data: payload,
-                onSuccess: () => onSuccess?.(),
-            });
+            post(accountsRoute.store.url(), { onSuccess: () => onSuccess?.() });
         }
     }
 
@@ -103,7 +92,27 @@ function AccountForm({ account, onSuccess }: AccountFormProps) {
             </div>
 
             <div className="space-y-1.5">
-                <Label htmlFor="acc-balance">Saldo inicial (R$)</Label>
+                <Label htmlFor="acc-currency">Moeda</Label>
+                <select
+                    id="acc-currency"
+                    value={data.currency}
+                    onChange={(e) => setData('currency', e.target.value)}
+                    className="border-input flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                >
+                    <option value="BRL">BRL — Real Brasileiro (R$)</option>
+                    <option value="USD">USD — Dólar Americano ($)</option>
+                    <option value="EUR">EUR — Euro (€)</option>
+                    <option value="GBP">GBP — Libra Esterlina (£)</option>
+                    <option value="ARS">ARS — Peso Argentino</option>
+                    <option value="JPY">JPY — Iene Japonês (¥)</option>
+                    <option value="CAD">CAD — Dólar Canadense</option>
+                    <option value="CHF">CHF — Franco Suíço</option>
+                </select>
+                {errors.currency && <p className="text-xs text-destructive">{errors.currency}</p>}
+            </div>
+
+            <div className="space-y-1.5">
+                <Label htmlFor="acc-balance">Saldo inicial ({data.currency})</Label>
                 <Input
                     id="acc-balance"
                     type="number"

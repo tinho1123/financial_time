@@ -17,6 +17,7 @@ class Account extends Model
         'user_id',
         'name',
         'type',
+        'currency',
         'initial_balance_in_cents',
     ];
 

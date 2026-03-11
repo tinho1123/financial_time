@@ -29,6 +29,7 @@ export type Account = {
     user_id: number;
     name: string;
     type: AccountType;
+    currency: string;
     initial_balance_in_cents: number;
     current_balance_in_cents: number;
 };

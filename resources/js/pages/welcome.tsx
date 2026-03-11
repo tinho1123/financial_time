@@ -259,12 +259,12 @@ export default function Welcome({ canRegister = true, plans }: WelcomeProps) {
                                     Acessar meu painel →
                                 </Link>
                             )}
-                            <a
+                            {/* <a
                                 href="#planos"
                                 className="rounded-full border border-white/20 px-8 py-4 text-base font-semibold text-white transition hover:bg-white/10"
                             >
                                 Ver planos
-                            </a>
+                            </a> */}
                         </div>
                     </div>
                 </section>
@@ -295,7 +295,7 @@ export default function Welcome({ canRegister = true, plans }: WelcomeProps) {
                     </div>
                 </section>
 
-                {/* Pricing */}
+                {/* Pricing — temporariamente desabilitado
                 {plans.length > 0 && (
                     <section id="planos" className="px-6 py-24">
                         <div className="mx-auto max-w-6xl">
@@ -329,6 +329,7 @@ export default function Welcome({ canRegister = true, plans }: WelcomeProps) {
                         </div>
                     </section>
                 )}
+                */}
 
                 {/* Tips */}
                 <section className="px-6 py-24">

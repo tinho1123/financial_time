@@ -40,11 +40,11 @@ const mainNavItems: NavItem[] = [
         href: accounts.index.url(),
         icon: Wallet,
     },
-    {
-        title: 'Cobrança',
-        href: billing.index.url(),
-        icon: CreditCard,
-    },
+    // {
+    //     title: 'Cobrança',
+    //     href: billing.index.url(),
+    //     icon: CreditCard,
+    // },
 ];
 
 export function AppSidebar() {
