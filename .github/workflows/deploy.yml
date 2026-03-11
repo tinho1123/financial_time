@@ -41,6 +41,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
+            ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
             cd ~/domains/financialtime.me/financial_time
             git pull origin main
 
