@@ -123,7 +123,6 @@ This project has domain-specific skills available. You MUST activate the relevan
 - Always use explicit return type declarations for methods and functions.
 - Use appropriate PHP type hints for method parameters.
 
-<!-- Explicit Return Types and Method Params -->
 ```php
 protected function isAccessible(User $user, ?string $path = null): bool
 {
@@ -289,3 +288,282 @@ Wayfinder generates TypeScript functions for Laravel routes. Import from `@/acti
 - IMPORTANT: Activate `tailwindcss-development` every time you're working with a Tailwind CSS or styling-related task.
 
 </laravel-boost-guidelines>
+
+---
+
+# Financial Time — Project Documentation
+
+## Project Overview
+
+Financial Time is a personal financial management SPA (Single Page Application) targeting the Brazilian market. It allows users to track accounts, transactions, and categories with plan-based feature gating and dual payment integration (Stripe and Mercado Pago PIX).
+
+**Tech stack summary:**
+- Backend: Laravel 12 + Fortify (auth) + Cashier (Stripe) + custom PIX (Mercado Pago)
+- Frontend: React 19 + Inertia.js v2 + Tailwind CSS v4 + Radix UI
+- Testing: Pest v4
+- Tooling: Pint (PHP formatting), ESLint + Prettier (JS formatting), Wayfinder (type-safe routes)
+
+---
+
+## Directory Structure
+
+```
+app/
+├── Actions/Fortify/         # Fortify user creation and password reset
+├── Concerns/                # Shared traits (PasswordValidationRules, ProfileValidationRules)
+├── Enums/                   # AccountType, CategoryType, PlanInterval, TransactionType
+├── Http/
+│   ├── Controllers/         # Feature controllers + Settings/ subdirectory
+│   ├── Middleware/          # HandleInertiaRequests, HandleAppearance
+│   └── Requests/            # Form Requests per feature (Accounts/, Transactions/, Categories/, Settings/)
+├── Models/                  # Eloquent models
+└── Services/                # BalanceService, MercadoPagoService, PlanLimitService
+
+bootstrap/
+├── app.php                  # Middleware, routing, exception config (no Kernel.php)
+└── providers.php            # Application service providers
+
+database/
+├── factories/               # Model factories for tests
+├── migrations/              # Timestamped migrations
+└── seeders/                 # DatabaseSeeder (seeds plans + test user)
+
+resources/js/
+├── app.tsx                  # Inertia app entry (PWA registration, theme init)
+├── ssr.tsx                  # SSR entry point
+├── components/              # Reusable React components
+│   └── ui/                  # Base UI components (Radix-based)
+├── hooks/                   # Custom React hooks
+├── layouts/                 # App, auth, settings layouts
+├── lib/                     # Utility functions
+├── pages/                   # Inertia page components (mirrors route structure)
+└── types/                   # TypeScript type definitions
+
+routes/
+├── web.php                  # All web routes (includes settings.php)
+├── settings.php             # Settings + Fortify auth routes
+└── console.php              # Artisan schedule / console commands
+
+tests/
+├── Feature/                 # Feature tests mirroring app structure
+│   ├── Auth/
+│   ├── Accounts/
+│   ├── Categories/
+│   ├── Transactions/
+│   ├── Billing/
+│   └── Settings/
+└── Unit/
+```
+
+---
+
+## Core Domain Models
+
+### User
+- Traits: `Billable` (Cashier), `TwoFactorAuthenticatable` (Fortify)
+- Key relationships: `plan()`, `transactions()`, `categories()`, `accounts()`
+- Auto-assigns free plan on creation via `boot()` hook
+- Key methods: `onPaidPlan()`, `canAddAccount()`, `canAddCategory()`
+
+### Account
+- Types (enum): `checking`, `savings`, `cash`, `credit`, `investment`
+- Balances stored in cents (`initial_balance_in_cents`)
+- Current balance derived via `currentBalanceInCents()` from transactions
+
+### Transaction
+- Types (enum): `income`, `expense`
+- Amounts in cents (`amount_in_cents`)
+- Tracks balance snapshots: `previous_balance_in_cents`, `current_balance_in_cents`
+- Belongs to a User, Account, and Category
+
+### Category
+- Types (enum): mirror TransactionType (`income`, `expense`)
+- User-scoped; plan limits apply
+
+### Plan
+- Intervals (enum): `free`, `monthly`, `annual`
+- Stores both Stripe price IDs and promo price IDs
+- Feature flags: `has_advanced_charts`, `max_accounts`, `max_categories`
+- Monetary values in cents
+
+### PixPayment
+- Tracks Mercado Pago PIX payment lifecycle
+- Referenced in billing routes and webhook handler
+
+---
+
+## Monetary Convention
+
+**All monetary values are stored and passed in cents (integers).** Never use floats for money.
+
+```php
+// Correct
+$account->initial_balance_in_cents = 150000; // R$ 1,500.00
+
+// Wrong
+$account->balance = 1500.00;
+```
+
+On the frontend, use the `<AmountDisplay>` component to format and display monetary values.
+
+---
+
+## Plan & Feature Gating
+
+Feature access is controlled by the `Plan` model and enforced in:
+- `User::onPaidPlan()` — checks Stripe subscription OR non-expired paid plan
+- `User::canAddAccount()` / `User::canAddCategory()` — checks against plan limits
+- `PlanLimitService` — centralizes limit logic
+
+The `<PlanLimitBanner>` React component surfaces limit warnings in the UI.
+
+---
+
+## Payment Integration
+
+### Stripe (subscription billing)
+- Uses Laravel Cashier v16
+- Webhook route: `POST /stripe/webhook` (CSRF exempt)
+- Handled by `CashierWebhookController`
+- Checkout initiated via `BillingController::stripeCheckout()`
+
+### Mercado Pago PIX (one-time payments, Brazilian market)
+- Uses `MercadoPagoService`
+- Webhook route: `POST /pix/webhook` (CSRF exempt)
+- Handled by `PixWebhookController`
+- QR code displayed via `billing/payment.tsx` page
+- Payment status polled via `billing.payment-status` route
+
+---
+
+## Authentication & Security
+
+- Laravel Fortify handles: login, register, password reset, email verification, 2FA
+- Two-factor authentication: TOTP-based, managed in `Settings/TwoFactorAuthenticationController`
+- Cookie encryption exemptions (in `bootstrap/app.php`): `appearance`, `sidebar_state`
+- CSRF exemptions: `stripe/webhook`, `pix/webhook`
+
+---
+
+## Frontend Architecture
+
+### Inertia Pages (`resources/js/pages/`)
+Each route maps to a page component. Pages receive typed props from controllers via `Inertia::render()`.
+
+### Layouts
+- `app-layout.tsx` — authenticated app shell (sidebar + header)
+- `auth-layout.tsx` — centered auth forms
+- `settings/layout.tsx` — settings sub-navigation
+
+### UI Components (`resources/js/components/ui/`)
+Radix UI primitives wrapped with Tailwind. Always check these before building new UI:
+`alert`, `avatar`, `badge`, `breadcrumb`, `button`, `card`, `checkbox`, `collapsible`, `dialog`, `dropdown-menu`, `icon`, `input`, `input-otp`, `label`, `navigation-menu`, `select`, `separator`, `sheet`, `sidebar`, `skeleton`, `spinner`, `toggle`, `toggle-group`, `tooltip`
+
+### Key App Components
+- `category-form.tsx` — create/edit categories
+- `transaction-form.tsx` — create/edit transactions
+- `monthly-chart.tsx` — income/expense bar chart (paid plan only)
+- `amount-display.tsx` — format cents to currency string
+- `plan-limit-banner.tsx` — warning banner when limits are reached
+
+### Hooks (`resources/js/hooks/`)
+- `use-appearance.tsx` — light/dark theme management
+- `use-clipboard.ts` — copy to clipboard
+- `use-mobile.tsx` — mobile breakpoint detection
+- `use-two-factor-auth.ts` — 2FA setup flow state
+
+### Route Access (Wayfinder)
+Never hardcode URLs in components. Use generated Wayfinder functions:
+```ts
+import { index } from '@/actions/TransactionController';
+// or
+import { dashboard } from '@/routes/dashboard';
+```
+
+---
+
+## Development Workflows
+
+### Local Setup
+```bash
+composer run setup   # install deps, .env, key, migrate, npm install, build
+composer run dev     # Sail + Vite + queue + pail (concurrent)
+```
+
+### Running Tests
+```bash
+php artisan test --compact                          # all tests
+php artisan test --compact --filter=AccountCrud    # filtered
+```
+
+### Code Formatting
+```bash
+vendor/bin/pint --dirty          # fix PHP style (run after any PHP change)
+npm run lint                      # ESLint fix
+npm run format                    # Prettier fix
+npm run types:check               # TypeScript type check
+```
+
+### Full CI Check
+```bash
+composer run ci:check   # lint + format + types + tests
+```
+
+### Frontend Build
+```bash
+npm run build       # production build
+npm run dev         # Vite dev server
+```
+
+---
+
+## Routing Conventions
+
+All routes are in `routes/web.php` and `routes/settings.php`. Key patterns:
+
+| Prefix | Guard | Purpose |
+|--------|-------|---------|
+| `/` | none | Welcome page (shows plans) |
+| `/dashboard` | `auth`, `verified` | Main dashboard |
+| `/transactions` | `auth`, `verified` | Transaction CRUD |
+| `/categories` | `auth`, `verified` | Category CRUD |
+| `/accounts` | `auth`, `verified` | Account CRUD |
+| `/billing/*` | `auth`, `verified` | Billing & payments |
+| `/settings/*` | `auth` | Profile, password, 2FA |
+| `/stripe/webhook` | none (CSRF exempt) | Stripe webhook |
+| `/pix/webhook` | none (CSRF exempt) | PIX webhook |
+
+---
+
+## Database Notes
+
+- SQLite in development, MySQL in production
+- All monetary columns end in `_in_cents` (integer type)
+- Timestamps follow Laravel defaults (`created_at`, `updated_at`)
+- Migrations are sequential; `2026_03_*` migrations handle the core domain
+
+---
+
+## PWA Configuration
+
+The app is configured as a PWA via `vite-plugin-pwa`:
+- App name: "Financial Time"
+- Theme color: `#10b981` (emerald-500)
+- Start URL: `/dashboard`
+- Display: `standalone`
+- Bunny Fonts are cached with a 1-year TTL
+
+---
+
+## Environment Variables
+
+Key `.env` variables (see `.env.example`):
+```
+STRIPE_KEY=
+STRIPE_SECRET=
+STRIPE_WEBHOOK_SECRET=
+MERCADO_PAGO_ACCESS_TOKEN=
+INERTIA_SSR_ENABLED=true
+```
+
+Never use `env()` directly in application code — always go through `config()`.
