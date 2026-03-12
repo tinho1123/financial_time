@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { ArrowLeftRight, CreditCard, LayoutGrid, Tag, Wallet } from 'lucide-react';
+import { ArrowLeftRight, LayoutGrid, Tag, Wallet } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -14,7 +14,6 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import accounts from '@/routes/accounts';
-import billing from '@/routes/billing';
 import categories from '@/routes/categories';
 import transactions from '@/routes/transactions';
 import type { NavItem } from '@/types';
