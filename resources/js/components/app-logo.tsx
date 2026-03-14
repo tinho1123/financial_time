@@ -5,7 +5,7 @@ export default function AppLogo() {
                 <span className="text-base leading-none">⏱</span>
             </div>
             <div className="grid flex-1 text-left text-sm">
-                <span className="truncate font-bold leading-tight tracking-tight">
+                <span className="truncate leading-tight font-bold tracking-tight">
                     Financial<span className="text-emerald-500">Time</span>
                 </span>
             </div>

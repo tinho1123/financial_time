@@ -8,7 +8,12 @@ import { formatCurrency } from '@/lib/currency';
 import { dashboard } from '@/routes';
 import * as billing from '@/routes/billing';
 import * as transactions from '@/routes/transactions';
-import type { BreadcrumbItem, CategoryBreakdown, MonthlySummary, Transaction } from '@/types';
+import type {
+    BreadcrumbItem,
+    CategoryBreakdown,
+    MonthlySummary,
+    Transaction,
+} from '@/types';
 
 interface DashboardProps {
     totalIncomeInCents: number;
@@ -20,18 +25,27 @@ interface DashboardProps {
     isPaidPlan: boolean;
 }
 
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: dashboard.url() }];
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Dashboard', href: dashboard.url() },
+];
 
 const now = new Date();
-const currentMonth = now.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+const currentMonth = now.toLocaleDateString('pt-BR', {
+    month: 'long',
+    year: 'numeric',
+});
 
 function UpgradePrompt() {
     return (
         <div className="flex h-full min-h-[180px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-amber-500/40 bg-amber-500/5 p-6 text-center">
             <Lock className="size-6 text-amber-500" />
             <div>
-                <p className="text-sm font-medium text-amber-500">Disponível no plano pago</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">Faça upgrade para ver gráficos avançados</p>
+                <p className="text-sm font-medium text-amber-500">
+                    Disponível no plano pago
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                    Faça upgrade para ver gráficos avançados
+                </p>
             </div>
             <Link
                 href={billing.index.url()}
@@ -56,7 +70,11 @@ export default function Dashboard({
     const firstName = (auth.user as { name: string }).name.split(' ')[0];
     const savingsRate =
         totalIncomeInCents > 0
-            ? Math.round(((totalIncomeInCents - totalExpenseInCents) / totalIncomeInCents) * 100)
+            ? Math.round(
+                  ((totalIncomeInCents - totalExpenseInCents) /
+                      totalIncomeInCents) *
+                      100,
+              )
             : 0;
 
     return (
@@ -66,8 +84,12 @@ export default function Dashboard({
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold">Olá, {firstName} 👋</h1>
-                        <p className="text-sm capitalize text-muted-foreground">{currentMonth}</p>
+                        <h1 className="text-2xl font-bold">
+                            Olá, {firstName} 👋
+                        </h1>
+                        <p className="text-sm text-muted-foreground capitalize">
+                            {currentMonth}
+                        </p>
                     </div>
                     <Link
                         href={transactions.index.url()}
@@ -82,31 +104,43 @@ export default function Dashboard({
                     <Card className="overflow-hidden border-0 bg-emerald-500/10 ring-1 ring-emerald-500/20">
                         <CardContent className="p-5">
                             <div className="mb-3 flex items-center justify-between">
-                                <span className="text-xs font-medium uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+                                <span className="text-xs font-medium tracking-wide text-emerald-600 uppercase dark:text-emerald-400">
                                     Receitas
                                 </span>
                                 <div className="flex size-8 items-center justify-center rounded-full bg-emerald-500/20">
                                     <TrendingUp className="size-4 text-emerald-500" />
                                 </div>
                             </div>
-                            <AmountDisplay amountInCents={totalIncomeInCents} type="income" className="text-2xl font-bold" />
-                            <p className="mt-1 text-xs text-muted-foreground">este mês</p>
+                            <AmountDisplay
+                                amountInCents={totalIncomeInCents}
+                                type="income"
+                                className="text-2xl font-bold"
+                            />
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                este mês
+                            </p>
                         </CardContent>
                     </Card>
 
                     <Card className="overflow-hidden border-0 bg-red-500/10 ring-1 ring-red-500/20">
                         <CardContent className="p-5">
                             <div className="mb-3 flex items-center justify-between">
-                                <span className="text-xs font-medium uppercase tracking-wide text-red-600 dark:text-red-400">
+                                <span className="text-xs font-medium tracking-wide text-red-600 uppercase dark:text-red-400">
                                     Despesas
                                 </span>
                                 <div className="flex size-8 items-center justify-center rounded-full bg-red-500/20">
                                     <TrendingDown className="size-4 text-red-500" />
                                 </div>
                             </div>
-                            <AmountDisplay amountInCents={totalExpenseInCents} type="expense" className="text-2xl font-bold" />
+                            <AmountDisplay
+                                amountInCents={totalExpenseInCents}
+                                type="expense"
+                                className="text-2xl font-bold"
+                            />
                             <p className="mt-1 text-xs text-muted-foreground">
-                                {savingsRate >= 0 ? `${savingsRate}% de economia` : 'acima das receitas'}
+                                {savingsRate >= 0
+                                    ? `${savingsRate}% de economia`
+                                    : 'acima das receitas'}
                             </p>
                         </CardContent>
                     </Card>
@@ -121,7 +155,7 @@ export default function Dashboard({
                         <CardContent className="p-5">
                             <div className="mb-3 flex items-center justify-between">
                                 <span
-                                    className={`text-xs font-medium uppercase tracking-wide ${
+                                    className={`text-xs font-medium tracking-wide uppercase ${
                                         netBalanceInCents >= 0
                                             ? 'text-blue-600 dark:text-blue-400'
                                             : 'text-orange-600 dark:text-orange-400'
@@ -131,7 +165,9 @@ export default function Dashboard({
                                 </span>
                                 <div
                                     className={`flex size-8 items-center justify-center rounded-full ${
-                                        netBalanceInCents >= 0 ? 'bg-blue-500/20' : 'bg-orange-500/20'
+                                        netBalanceInCents >= 0
+                                            ? 'bg-blue-500/20'
+                                            : 'bg-orange-500/20'
                                     }`}
                                 >
                                     <Wallet
@@ -141,10 +177,16 @@ export default function Dashboard({
                             </div>
                             <AmountDisplay
                                 amountInCents={Math.abs(netBalanceInCents)}
-                                type={netBalanceInCents >= 0 ? 'income' : 'expense'}
+                                type={
+                                    netBalanceInCents >= 0
+                                        ? 'income'
+                                        : 'expense'
+                                }
                                 className="text-2xl font-bold"
                             />
-                            <p className="mt-1 text-xs text-muted-foreground">em todas as contas</p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                em todas as contas
+                            </p>
                         </CardContent>
                     </Card>
                 </div>
@@ -153,7 +195,9 @@ export default function Dashboard({
                 <div className="grid gap-4 lg:grid-cols-2">
                     <Card>
                         <CardHeader className="pb-3">
-                            <CardTitle className="text-sm font-semibold">Histórico — 6 meses</CardTitle>
+                            <CardTitle className="text-sm font-semibold">
+                                Histórico — 6 meses
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
                             {isPaidPlan && monthlySummary ? (
@@ -166,7 +210,9 @@ export default function Dashboard({
 
                     <Card>
                         <CardHeader className="pb-3">
-                            <CardTitle className="text-sm font-semibold">Despesas por categoria</CardTitle>
+                            <CardTitle className="text-sm font-semibold">
+                                Despesas por categoria
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
                             {isPaidPlan && categoryBreakdown ? (
@@ -177,21 +223,31 @@ export default function Dashboard({
                                 ) : (
                                     <div className="space-y-3">
                                         {categoryBreakdown.map((item) => (
-                                            <div key={item.category_name} className="space-y-1.5">
+                                            <div
+                                                key={item.category_name}
+                                                className="space-y-1.5"
+                                            >
                                                 <div className="flex items-center justify-between text-sm">
                                                     <div className="flex items-center gap-2">
                                                         <span
                                                             className="size-3 rounded-full"
-                                                            style={{ backgroundColor: item.color }}
+                                                            style={{
+                                                                backgroundColor:
+                                                                    item.color,
+                                                            }}
                                                         />
-                                                        <span className="font-medium">{item.category_name}</span>
+                                                        <span className="font-medium">
+                                                            {item.category_name}
+                                                        </span>
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-xs text-muted-foreground">
                                                             {item.percentage}%
                                                         </span>
                                                         <span className="font-semibold">
-                                                            {formatCurrency(item.total_in_cents)}
+                                                            {formatCurrency(
+                                                                item.total_in_cents,
+                                                            )}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -200,7 +256,8 @@ export default function Dashboard({
                                                         className="h-full rounded-full transition-all duration-500"
                                                         style={{
                                                             width: `${item.percentage}%`,
-                                                            backgroundColor: item.color,
+                                                            backgroundColor:
+                                                                item.color,
                                                         }}
                                                     />
                                                 </div>
@@ -218,7 +275,9 @@ export default function Dashboard({
                 {/* Recent transactions */}
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-3">
-                        <CardTitle className="text-sm font-semibold">Transações recentes</CardTitle>
+                        <CardTitle className="text-sm font-semibold">
+                            Transações recentes
+                        </CardTitle>
                         <Link
                             href={transactions.index.url()}
                             className="text-xs text-muted-foreground hover:text-foreground"
@@ -229,7 +288,9 @@ export default function Dashboard({
                     <CardContent className="p-0">
                         {recentTransactions.length === 0 ? (
                             <div className="py-12 text-center">
-                                <p className="text-sm text-muted-foreground">Nenhuma transação registrada ainda.</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Nenhuma transação registrada ainda.
+                                </p>
                                 <Link
                                     href={transactions.index.url()}
                                     className="mt-3 inline-block text-sm font-medium text-emerald-500 hover:text-emerald-400"
@@ -258,23 +319,35 @@ export default function Dashboard({
                                                 <span
                                                     className="size-3 rounded-full"
                                                     style={{
-                                                        backgroundColor: tx.category
-                                                            ? tx.category.color
-                                                            : tx.type === 'income'
-                                                              ? '#10b981'
-                                                              : '#ef4444',
+                                                        backgroundColor:
+                                                            tx.category
+                                                                ? tx.category
+                                                                      .color
+                                                                : tx.type ===
+                                                                    'income'
+                                                                  ? '#10b981'
+                                                                  : '#ef4444',
                                                     }}
                                                 />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-medium leading-tight">{tx.description}</p>
+                                                <p className="text-sm leading-tight font-medium">
+                                                    {tx.description}
+                                                </p>
                                                 <p className="mt-0.5 text-xs text-muted-foreground">
-                                                    {new Date(tx.date + 'T12:00:00').toLocaleDateString('pt-BR', {
-                                                        day: '2-digit',
-                                                        month: 'short',
-                                                    })}
-                                                    {tx.category && ` · ${tx.category.name}`}
-                                                    {tx.account && ` · ${tx.account.name}`}
+                                                    {new Date(
+                                                        tx.date + 'T12:00:00',
+                                                    ).toLocaleDateString(
+                                                        'pt-BR',
+                                                        {
+                                                            day: '2-digit',
+                                                            month: 'short',
+                                                        },
+                                                    )}
+                                                    {tx.category &&
+                                                        ` · ${tx.category.name}`}
+                                                    {tx.account &&
+                                                        ` · ${tx.account.name}`}
                                                 </p>
                                             </div>
                                         </div>

@@ -12,12 +12,23 @@ interface CategoryFormProps {
 }
 
 const PRESET_COLORS = [
-    '#6366f1', '#8b5cf6', '#ec4899', '#ef4444',
-    '#f97316', '#eab308', '#22c55e', '#14b8a6',
-    '#3b82f6', '#64748b',
+    '#6366f1',
+    '#8b5cf6',
+    '#ec4899',
+    '#ef4444',
+    '#f97316',
+    '#eab308',
+    '#22c55e',
+    '#14b8a6',
+    '#3b82f6',
+    '#64748b',
 ];
 
-export function CategoryForm({ category, defaultType = 'income', onSuccess }: CategoryFormProps) {
+export function CategoryForm({
+    category,
+    defaultType = 'income',
+    onSuccess,
+}: CategoryFormProps) {
     const isEditing = Boolean(category);
 
     const { data, setData, post, put, processing, errors, reset } = useForm({
@@ -56,7 +67,9 @@ export function CategoryForm({ category, defaultType = 'income', onSuccess }: Ca
                     placeholder="Ex: Alimentação"
                     aria-invalid={Boolean(errors.name)}
                 />
-                {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
+                {errors.name && (
+                    <p className="text-xs text-destructive">{errors.name}</p>
+                )}
             </div>
 
             {!isEditing && (
@@ -80,7 +93,11 @@ export function CategoryForm({ category, defaultType = 'income', onSuccess }: Ca
                             </button>
                         ))}
                     </div>
-                    {errors.type && <p className="text-xs text-destructive">{errors.type}</p>}
+                    {errors.type && (
+                        <p className="text-xs text-destructive">
+                            {errors.type}
+                        </p>
+                    )}
                 </div>
             )}
 
@@ -92,7 +109,7 @@ export function CategoryForm({ category, defaultType = 'income', onSuccess }: Ca
                             key={color}
                             type="button"
                             onClick={() => setData('color', color)}
-                            className={`size-7 rounded-full transition-transform hover:scale-110 ${data.color === color ? 'ring-2 ring-offset-2 ring-ring' : ''}`}
+                            className={`size-7 rounded-full transition-transform hover:scale-110 ${data.color === color ? 'ring-2 ring-ring ring-offset-2' : ''}`}
                             style={{ backgroundColor: color }}
                             title={color}
                         />
@@ -105,7 +122,9 @@ export function CategoryForm({ category, defaultType = 'income', onSuccess }: Ca
                         title="Cor personalizada"
                     />
                 </div>
-                {errors.color && <p className="text-xs text-destructive">{errors.color}</p>}
+                {errors.color && (
+                    <p className="text-xs text-destructive">{errors.color}</p>
+                )}
             </div>
 
             <Button type="submit" disabled={processing} className="w-full">

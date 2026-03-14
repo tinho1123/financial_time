@@ -1,5 +1,10 @@
 export type TransactionType = 'income' | 'expense';
-export type AccountType = 'checking' | 'savings' | 'cash' | 'credit' | 'investment';
+export type AccountType =
+    | 'checking'
+    | 'savings'
+    | 'cash'
+    | 'credit'
+    | 'investment';
 export type PlanInterval = 'free' | 'monthly' | 'annual';
 
 export type Plan = {

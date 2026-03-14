@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { useForm } from '@inertiajs/react';
 import { Head } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import { CategoryForm } from '@/components/category-form';
 import { PlanLimitBanner } from '@/components/plan-limit-banner';
 import { Button } from '@/components/ui/button';
@@ -25,7 +25,13 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Categorias', href: categories.index.url() },
 ];
 
-function CategoryCard({ category, onEdit }: { category: Category; onEdit: (c: Category) => void }) {
+function CategoryCard({
+    category,
+    onEdit,
+}: {
+    category: Category;
+    onEdit: (c: Category) => void;
+}) {
     const { delete: destroy, processing } = useForm();
 
     function handleDelete() {
@@ -38,11 +44,19 @@ function CategoryCard({ category, onEdit }: { category: Category; onEdit: (c: Ca
     return (
         <div className="flex items-center justify-between rounded-lg border p-3">
             <div className="flex items-center gap-3">
-                <span className="size-3 rounded-full" style={{ backgroundColor: category.color }} />
+                <span
+                    className="size-3 rounded-full"
+                    style={{ backgroundColor: category.color }}
+                />
                 <span className="text-sm font-medium">{category.name}</span>
             </div>
             <div className="flex gap-1">
-                <Button size="icon" variant="ghost" className="size-8" onClick={() => onEdit(category)}>
+                <Button
+                    size="icon"
+                    variant="ghost"
+                    className="size-8"
+                    onClick={() => onEdit(category)}
+                >
                     <Pencil className="size-3.5" />
                 </Button>
                 <Button
@@ -59,9 +73,15 @@ function CategoryCard({ category, onEdit }: { category: Category; onEdit: (c: Ca
     );
 }
 
-export default function CategoriesIndex({ incomeCategories, expenseCategories, canAddMore }: CategoriesPageProps) {
+export default function CategoriesIndex({
+    incomeCategories,
+    expenseCategories,
+    canAddMore,
+}: CategoriesPageProps) {
     const [createOpen, setCreateOpen] = useState(false);
-    const [createType, setCreateType] = useState<'income' | 'expense'>('income');
+    const [createType, setCreateType] = useState<'income' | 'expense'>(
+        'income',
+    );
     const [editCategory, setEditCategory] = useState<Category | null>(null);
 
     function openCreate(type: 'income' | 'expense') {
@@ -94,10 +114,16 @@ export default function CategoriesIndex({ incomeCategories, expenseCategories, c
                             </Button>
                         </div>
                         {incomeCategories.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">Nenhuma categoria de receita.</p>
+                            <p className="text-sm text-muted-foreground">
+                                Nenhuma categoria de receita.
+                            </p>
                         ) : (
                             incomeCategories.map((c) => (
-                                <CategoryCard key={c.id} category={c} onEdit={setEditCategory} />
+                                <CategoryCard
+                                    key={c.id}
+                                    category={c}
+                                    onEdit={setEditCategory}
+                                />
                             ))
                         )}
                     </section>
@@ -118,10 +144,16 @@ export default function CategoriesIndex({ incomeCategories, expenseCategories, c
                             </Button>
                         </div>
                         {expenseCategories.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">Nenhuma categoria de despesa.</p>
+                            <p className="text-sm text-muted-foreground">
+                                Nenhuma categoria de despesa.
+                            </p>
                         ) : (
                             expenseCategories.map((c) => (
-                                <CategoryCard key={c.id} category={c} onEdit={setEditCategory} />
+                                <CategoryCard
+                                    key={c.id}
+                                    category={c}
+                                    onEdit={setEditCategory}
+                                />
                             ))
                         )}
                     </section>
@@ -140,7 +172,10 @@ export default function CategoriesIndex({ incomeCategories, expenseCategories, c
                 </DialogContent>
             </Dialog>
 
-            <Dialog open={Boolean(editCategory)} onOpenChange={(open) => !open && setEditCategory(null)}>
+            <Dialog
+                open={Boolean(editCategory)}
+                onOpenChange={(open) => !open && setEditCategory(null)}
+            >
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Editar categoria</DialogTitle>

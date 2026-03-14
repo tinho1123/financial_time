@@ -18,9 +18,12 @@ export default function BillingSuccess() {
             <div className="flex flex-1 flex-col items-center justify-center gap-6 py-20 text-center">
                 <CheckCircle2 className="size-16 text-green-500" />
                 <div>
-                    <h1 className="text-2xl font-bold">Pagamento confirmado!</h1>
+                    <h1 className="text-2xl font-bold">
+                        Pagamento confirmado!
+                    </h1>
                     <p className="mt-2 text-muted-foreground">
-                        Sua assinatura foi ativada com sucesso. Aproveite todos os recursos.
+                        Sua assinatura foi ativada com sucesso. Aproveite todos
+                        os recursos.
                     </p>
                 </div>
                 <div className="flex gap-3">
@@ -28,7 +31,9 @@ export default function BillingSuccess() {
                         <Link href={dashboard.url()}>Ir para o Dashboard</Link>
                     </Button>
                     <Button variant="outline" asChild>
-                        <Link href={billingRoute.index.url()}>Ver meu plano</Link>
+                        <Link href={billingRoute.index.url()}>
+                            Ver meu plano
+                        </Link>
                     </Button>
                 </div>
             </div>
