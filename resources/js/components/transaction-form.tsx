@@ -24,6 +24,16 @@ export function TransactionForm({
 }: TransactionFormProps) {
     const isEditing = Boolean(transaction);
 
+    const { data, setData, post, put, processing, errors } = useForm({
+        type: transaction?.type ?? 'expense',
+        account_id: transaction?.account_id ?? (accounts[0]?.id ?? ''),
+        category_id: transaction?.category_id ?? '',
+        amount_in_cents: transaction ? (transaction.amount_in_cents / 100).toFixed(2) : '',
+        description: transaction?.description ?? '',
+        date: transaction?.date ?? new Date().toISOString().slice(0, 10),
+        notes: transaction?.notes ?? '',
+    });
+
     if (!isEditing && accounts.length === 0) {
         return (
             <div className="space-y-4 py-6 text-center">
@@ -36,16 +46,6 @@ export function TransactionForm({
             </div>
         );
     }
-
-    const { data, setData, post, put, processing, errors } = useForm({
-        type: transaction?.type ?? 'expense',
-        account_id: transaction?.account_id ?? (accounts[0]?.id ?? ''),
-        category_id: transaction?.category_id ?? '',
-        amount_in_cents: transaction ? (transaction.amount_in_cents / 100).toFixed(2) : '',
-        description: transaction?.description ?? '',
-        date: transaction?.date ?? new Date().toISOString().slice(0, 10),
-        notes: transaction?.notes ?? '',
-    });
 
     const activeCategories = data.type === 'income' ? incomeCategories : expenseCategories;
 
