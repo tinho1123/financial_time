@@ -20,7 +20,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 function useCountdown(expiresAt: string) {
     const [secondsLeft, setSecondsLeft] = useState(() => {
-        const diff = Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000);
+        const diff = Math.floor(
+            (new Date(expiresAt).getTime() - Date.now()) / 1000,
+        );
         return Math.max(0, diff);
     });
 
@@ -42,13 +44,19 @@ function useCountdown(expiresAt: string) {
 
 export default function BillingPayment({ pixPayment }: PaymentPageProps) {
     const [copied, setCopied] = useState(false);
-    const [status, setStatus] = useState<'pending' | 'paid' | 'expired' | 'failed'>('pending');
-    const { secondsLeft, days, hours, minutes, seconds } = useCountdown(pixPayment.expires_at);
+    const [status, setStatus] = useState<
+        'pending' | 'paid' | 'expired' | 'failed'
+    >('pending');
+    const { secondsLeft, days, hours, minutes, seconds } = useCountdown(
+        pixPayment.expires_at,
+    );
 
     useEffect(() => {
         const interval = setInterval(async () => {
             try {
-                const response = await fetch(billingRoute.paymentStatus.url(pixPayment.id));
+                const response = await fetch(
+                    billingRoute.paymentStatus.url(pixPayment.id),
+                );
                 const data = await response.json();
                 setStatus(data.status);
                 if (data.status === 'paid') {
@@ -96,24 +104,39 @@ export default function BillingPayment({ pixPayment }: PaymentPageProps) {
                             <div className="flex flex-col items-center gap-2 py-8 text-center text-muted-foreground">
                                 <Clock className="size-12 opacity-50" />
                                 <p className="font-medium">QR Code expirado</p>
-                                <p className="text-sm">Gere um novo pagamento para continuar.</p>
-                                <Button variant="outline" className="mt-2" onClick={() => router.visit(billingRoute.index.url())}>
+                                <p className="text-sm">
+                                    Gere um novo pagamento para continuar.
+                                </p>
+                                <Button
+                                    variant="outline"
+                                    className="mt-2"
+                                    onClick={() =>
+                                        router.visit(billingRoute.index.url())
+                                    }
+                                >
                                     Voltar para planos
                                 </Button>
                             </div>
                         ) : (
                             <>
                                 <div className="rounded-xl border bg-white p-4">
-                                    <QRCodeSVG value={pixPayment.qr_code} size={200} />
+                                    <QRCodeSVG
+                                        value={pixPayment.qr_code}
+                                        size={200}
+                                    />
                                 </div>
 
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                     <Clock className="size-4" />
                                     {days > 0 ? (
-                                        <span>Expira em {days}d {hours}h {minutes}m</span>
+                                        <span>
+                                            Expira em {days}d {hours}h {minutes}
+                                            m
+                                        </span>
                                     ) : (
                                         <span>
-                                            Expira em {String(hours).padStart(2, '0')}:
+                                            Expira em{' '}
+                                            {String(hours).padStart(2, '0')}:
                                             {String(minutes).padStart(2, '0')}:
                                             {String(seconds).padStart(2, '0')}
                                         </span>
@@ -121,10 +144,19 @@ export default function BillingPayment({ pixPayment }: PaymentPageProps) {
                                 </div>
 
                                 <div className="w-full">
-                                    <p className="mb-1 text-xs text-muted-foreground">Código PIX copia e cola:</p>
+                                    <p className="mb-1 text-xs text-muted-foreground">
+                                        Código PIX copia e cola:
+                                    </p>
                                     <div className="flex items-center gap-2 rounded-lg border bg-muted/50 p-3">
-                                        <p className="flex-1 truncate font-mono text-xs">{pixPayment.qr_code}</p>
-                                        <Button size="sm" variant="outline" onClick={handleCopy} className="shrink-0">
+                                        <p className="flex-1 truncate font-mono text-xs">
+                                            {pixPayment.qr_code}
+                                        </p>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={handleCopy}
+                                            className="shrink-0"
+                                        >
                                             {copied ? (
                                                 <CheckCircle2 className="size-4 text-green-500" />
                                             ) : (
@@ -135,7 +167,8 @@ export default function BillingPayment({ pixPayment }: PaymentPageProps) {
                                 </div>
 
                                 <p className="text-center text-xs text-muted-foreground">
-                                    Verificando pagamento automaticamente a cada 3 segundos...
+                                    Verificando pagamento automaticamente a cada
+                                    3 segundos...
                                 </p>
                             </>
                         )}

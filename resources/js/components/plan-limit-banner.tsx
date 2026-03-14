@@ -1,5 +1,5 @@
-import { AlertTriangle } from 'lucide-react';
 import { Link } from '@inertiajs/react';
+import { AlertTriangle } from 'lucide-react';
 import billing from '@/routes/billing';
 
 interface PlanLimitBannerProps {
