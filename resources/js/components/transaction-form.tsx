@@ -1,7 +1,9 @@
-import { useForm } from '@inertiajs/react';
+import { Link, useForm } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import accountsRoute from '@/routes/accounts';
+import categoriesRoute from '@/routes/categories';
 import transactions from '@/routes/transactions';
 import type { Account, Category, Transaction } from '@/types';
 
@@ -31,6 +33,19 @@ export function TransactionForm({
         date: transaction?.date ?? new Date().toISOString().slice(0, 10),
         notes: transaction?.notes ?? '',
     });
+
+    if (!isEditing && accounts.length === 0) {
+        return (
+            <div className="space-y-4 py-6 text-center">
+                <p className="text-sm text-muted-foreground">
+                    Você precisa ter pelo menos uma conta para registrar uma transação.
+                </p>
+                <Button asChild>
+                    <Link href={accountsRoute.index.url()}>Criar conta</Link>
+                </Button>
+            </div>
+        );
+    }
 
     const activeCategories = data.type === 'income' ? incomeCategories : expenseCategories;
 
@@ -134,6 +149,14 @@ export function TransactionForm({
                             </option>
                         ))}
                     </select>
+                    {activeCategories.length === 0 && (
+                        <p className="text-xs text-muted-foreground">
+                            Sem categorias para este tipo.{' '}
+                            <Link href={categoriesRoute.index.url()} className="underline hover:text-foreground">
+                                Criar categoria
+                            </Link>
+                        </p>
+                    )}
                 </div>
 
                 <div className="space-y-1.5">

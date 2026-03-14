@@ -25,7 +25,8 @@ test('user can create an account', function () {
     $this->post(route('accounts.store'), [
         'name' => 'Nubank',
         'type' => 'checking',
-        'initial_balance_in_cents' => 50000,
+        'currency' => 'BRL',
+        'initial_balance_in_cents' => '500.00',
     ])->assertRedirect();
 
     $this->assertDatabaseHas('accounts', [
@@ -41,7 +42,8 @@ test('free plan is limited to 1 account', function () {
     $response = $this->post(route('accounts.store'), [
         'name' => 'Segunda conta',
         'type' => 'savings',
-        'initial_balance_in_cents' => 0,
+        'currency' => 'BRL',
+        'initial_balance_in_cents' => '0.00',
     ]);
 
     $response->assertSessionHasErrors('limit');
@@ -54,7 +56,8 @@ test('user can update their account', function () {
     $this->put(route('accounts.update', $account), [
         'name' => 'Bradesco',
         'type' => $account->type->value,
-        'initial_balance_in_cents' => $account->initial_balance_in_cents,
+        'currency' => 'BRL',
+        'initial_balance_in_cents' => number_format($account->initial_balance_in_cents / 100, 2, '.', ''),
     ])->assertRedirect();
 
     expect($account->fresh()->name)->toBe('Bradesco');
@@ -67,7 +70,8 @@ test('user cannot update another user account', function () {
     $this->put(route('accounts.update', $account), [
         'name' => 'Hacked',
         'type' => 'checking',
-        'initial_balance_in_cents' => 0,
+        'currency' => 'BRL',
+        'initial_balance_in_cents' => '0.00',
     ])->assertForbidden();
 });
 
