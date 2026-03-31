@@ -63,7 +63,7 @@ function PlanCard({
     };
 
     function handleCreemCheckout() {
-        post(billingRoute.creem.url(plan.id));
+        post(billingRoute.creem.url(plan.uuid));
     }
 
     function handlePortal() {

@@ -13,6 +13,7 @@ class Plan extends Model
     use HasFactory;
 
     protected $fillable = [
+        'uuid',
         'name',
         'slug',
         'price_in_cents',
@@ -38,6 +39,11 @@ class Plan extends Model
             'has_advanced_charts' => 'boolean',
             'has_creem_checkout' => 'boolean',
         ];
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'uuid';
     }
 
     public function users(): HasMany

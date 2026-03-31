@@ -9,6 +9,7 @@ export type PlanInterval = 'free' | 'monthly' | 'annual';
 
 export type Plan = {
     id: number;
+    uuid: string;
     slug: string;
     name: string;
     price_in_cents: number;

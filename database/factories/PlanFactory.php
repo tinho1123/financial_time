@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Plan>
@@ -17,6 +18,7 @@ class PlanFactory extends Factory
     public function definition(): array
     {
         return [
+            'uuid' => Str::uuid(),
             'name' => 'Grátis',
             'slug' => 'free',
             'price_in_cents' => 0,
