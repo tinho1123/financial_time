@@ -11,7 +11,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
-import { formatCurrency } from '@/lib/currency';
+import { formatCurrency, formatUsdCurrency } from '@/lib/currency';
 import billingRoute from '@/routes/billing';
 import type { BreadcrumbItem, Plan } from '@/types';
 
@@ -20,7 +20,7 @@ interface BillingPageProps {
     currentPlan: Plan | null;
     planExpiresAt: string | null;
     isPaidPlan: boolean;
-    isStripeSubscriber: boolean;
+    isCreemSubscriber: boolean;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -31,12 +31,12 @@ function PlanCard({
     plan,
     currentPlan,
     isPaidPlan,
-    isStripeSubscriber,
+    isCreemSubscriber,
 }: {
     plan: Plan;
     currentPlan: Plan | null;
     isPaidPlan: boolean;
-    isStripeSubscriber: boolean;
+    isCreemSubscriber: boolean;
 }) {
     const { post, processing } = useForm();
     const isCurrent = currentPlan?.id === plan.id;
@@ -65,8 +65,8 @@ function PlanCard({
         post(billingRoute.checkout.url(plan.id));
     }
 
-    function handleStripeCheckout() {
-        post(billingRoute.stripe.url(plan.id));
+    function handleCreemCheckout() {
+        post(billingRoute.creem.url(plan.id));
     }
 
     function handlePortal() {
@@ -168,12 +168,8 @@ function PlanCard({
                     <Button variant="outline" className="w-full" disabled>
                         {isCurrent && !isPaidPlan ? 'Plano atual' : 'Grátis'}
                     </Button>
-                ) : isCurrentAndPaid && isStripeSubscriber ? (
-                    <Button
-                        variant="outline"
-                        className="w-full"
-                        onClick={handlePortal}
-                    >
+                ) : isCurrentAndPaid && isCreemSubscriber ? (
+                    <Button variant="outline" className="w-full" onClick={handlePortal}>
                         <CreditCard className="mr-2 size-4" />
                         Gerenciar assinatura
                     </Button>
@@ -191,15 +187,15 @@ function PlanCard({
                             <QrCode className="mr-2 size-4" />
                             Pagar via PIX
                         </Button>
-                        {plan.has_stripe_checkout && (
-                            <Button
-                                variant="outline"
-                                className="w-full"
-                                onClick={handleStripeCheckout}
-                                disabled={processing}
-                            >
+                        {plan.has_creem_checkout && (
+                            <Button variant="outline" className="w-full" onClick={handleCreemCheckout} disabled={processing}>
                                 <CreditCard className="mr-2 size-4" />
                                 Pagar com Cartão
+                                {plan.usd_price_in_cents && (
+                                    <span className="ml-1 text-xs text-muted-foreground">
+                                        ({formatUsdCurrency(plan.usd_price_in_cents)}{plan.interval === 'annual' ? '/yr' : '/mo'})
+                                    </span>
+                                )}
                             </Button>
                         )}
                     </>
@@ -209,13 +205,7 @@ function PlanCard({
     );
 }
 
-export default function BillingIndex({
-    plans,
-    currentPlan,
-    planExpiresAt,
-    isPaidPlan,
-    isStripeSubscriber,
-}: BillingPageProps) {
+export default function BillingIndex({ plans, currentPlan, planExpiresAt, isPaidPlan, isCreemSubscriber }: BillingPageProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Cobrança" />
@@ -244,7 +234,7 @@ export default function BillingIndex({
                     </div>
                 )}
 
-                {isPaidPlan && isStripeSubscriber && (
+                {isPaidPlan && isCreemSubscriber && (
                     <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 dark:border-blue-800/40 dark:bg-blue-900/20 dark:text-blue-300">
                         Assinatura ativa via cartão — renovação automática.
                     </div>
@@ -257,7 +247,7 @@ export default function BillingIndex({
                             plan={plan}
                             currentPlan={currentPlan}
                             isPaidPlan={isPaidPlan}
-                            isStripeSubscriber={isStripeSubscriber}
+                            isCreemSubscriber={isCreemSubscriber}
                         />
                     ))}
                 </div>

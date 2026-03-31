@@ -26,8 +26,7 @@ class PlanFactory extends Factory
             'max_accounts' => 1,
             'max_categories' => 5,
             'has_advanced_charts' => false,
-            'stripe_price_id' => null,
-            'stripe_promo_price_id' => null,
+            'creem_product_id' => null,
         ];
     }
 

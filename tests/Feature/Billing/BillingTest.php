@@ -2,7 +2,8 @@
 
 use App\Models\Plan;
 use App\Models\User;
-use Laravel\Cashier\Events\WebhookReceived;
+use Creem\Laravel\Events\SubscriptionActive;
+use Creem\Laravel\Events\SubscriptionCanceled;
 
 beforeEach(function () {
     $this->freePlan = Plan::factory()->create([
@@ -39,21 +40,21 @@ test('billing page shows current plan', function () {
     expect($props['currentPlan']['id'])->toBe($this->freePlan->id);
 });
 
-test('billing page includes stripe subscriber status', function () {
+test('billing page includes creem subscriber status', function () {
     $response = $this->get(route('billing.index'));
     $props = $response->original->getData()['page']['props'];
 
-    expect($props['isStripeSubscriber'])->toBeFalse();
+    expect($props['isCreemSubscriber'])->toBeFalse();
 });
 
-test('billing page plans include has_stripe_checkout flag', function () {
-    $planWithStripe = Plan::factory()->monthly()->create(['slug' => 'monthly-stripe', 'stripe_price_id' => 'price_test_123']);
+test('billing page plans include has_creem_checkout flag', function () {
+    $planWithCreem = Plan::factory()->monthly()->create(['slug' => 'monthly-creem', 'creem_product_id' => 'prod_test_123']);
 
     $response = $this->get(route('billing.index'));
     $props = $response->original->getData()['page']['props'];
 
-    $found = collect($props['plans'])->firstWhere('id', $planWithStripe->id);
-    expect($found['has_stripe_checkout'])->toBeTrue();
+    $found = collect($props['plans'])->firstWhere('id', $planWithCreem->id);
+    expect($found['has_creem_checkout'])->toBeTrue();
 });
 
 test('unauthenticated user cannot access billing page', function () {
@@ -67,56 +68,50 @@ test('checkout requires a non-free plan', function () {
         ->assertSessionHasErrors('plan');
 });
 
-test('stripe checkout requires a non-free plan', function () {
-    $this->post(route('billing.stripe', $this->freePlan))
+test('creem checkout requires a non-free plan', function () {
+    $this->post(route('billing.creem', $this->freePlan))
         ->assertRedirect()
         ->assertSessionHasErrors('plan');
 });
 
-test('stripe checkout requires stripe price id configured on plan', function () {
-    $planWithoutStripe = Plan::factory()->monthly()->create(['slug' => 'monthly-no-stripe', 'stripe_price_id' => null]);
+test('creem checkout requires creem product id configured on plan', function () {
+    $planWithoutCreem = Plan::factory()->monthly()->create(['slug' => 'monthly-no-creem', 'creem_product_id' => null]);
 
-    $this->post(route('billing.stripe', $planWithoutStripe))
+    $this->post(route('billing.creem', $planWithoutCreem))
         ->assertRedirect()
         ->assertSessionHasErrors('plan');
 });
 
-test('stripe webhook updates user plan on subscription created', function () {
-    $this->monthlyPlan->update(['stripe_price_id' => 'price_monthly_test']);
-    $this->user->forceFill(['stripe_id' => 'cus_test123'])->save();
+test('creem webhook updates user plan on subscription active', function () {
+    $this->monthlyPlan->update(['creem_product_id' => 'prod_monthly_test']);
+    $this->user->forceFill(['creem_customer_id' => 'cus_test123'])->save();
 
-    event(new WebhookReceived([
-        'type' => 'customer.subscription.created',
-        'data' => [
-            'object' => [
-                'customer' => 'cus_test123',
-                'status' => 'active',
-                'items' => [
-                    'data' => [
-                        ['price' => ['id' => 'price_monthly_test']],
-                    ],
-                ],
-            ],
-        ],
-    ]));
+    SubscriptionActive::dispatch([
+        'id' => 'sub_test123',
+        'customer_id' => 'cus_test123',
+        'product_id' => 'prod_monthly_test',
+        'status' => 'active',
+    ]);
 
-    expect($this->user->fresh()->plan_id)->toBe($this->monthlyPlan->id);
+    $fresh = $this->user->fresh();
+    expect($fresh->plan_id)->toBe($this->monthlyPlan->id)
+        ->and($fresh->creem_subscription_id)->toBe('sub_test123');
 });
 
-test('stripe webhook downgrades user on subscription deleted', function () {
-    $this->user->forceFill(['stripe_id' => 'cus_test123'])->save();
-    $this->user->update(['plan_id' => $this->monthlyPlan->id]);
+test('creem webhook downgrades user on subscription canceled', function () {
+    $this->user->forceFill([
+        'creem_customer_id' => 'cus_test123',
+        'creem_subscription_id' => 'sub_test123',
+        'plan_id' => $this->monthlyPlan->id,
+    ])->save();
 
-    event(new WebhookReceived([
-        'type' => 'customer.subscription.deleted',
-        'data' => [
-            'object' => [
-                'customer' => 'cus_test123',
-                'status' => 'canceled',
-                'items' => ['data' => []],
-            ],
-        ],
-    ]));
+    SubscriptionCanceled::dispatch([
+        'id' => 'sub_test123',
+        'customer_id' => 'cus_test123',
+        'status' => 'canceled',
+    ]);
 
-    expect($this->user->fresh()->plan_id)->toBe($this->freePlan->id);
+    $fresh = $this->user->fresh();
+    expect($fresh->plan_id)->toBe($this->freePlan->id)
+        ->and($fresh->creem_subscription_id)->toBeNull();
 });

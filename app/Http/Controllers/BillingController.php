@@ -6,6 +6,7 @@ use App\Enums\PlanInterval;
 use App\Models\PixPayment;
 use App\Models\Plan;
 use App\Services\MercadoPagoService;
+use Creem\Laravel\Facades\Creem;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,16 +21,40 @@ class BillingController extends Controller
     {
         $user = $request->user();
         $plans = Plan::query()->orderBy('price_in_cents')->get();
+        $creemPrices = $this->fetchCreemPrices($plans->pluck('creem_product_id')->filter()->values()->all());
 
         return Inertia::render('billing/index', [
             'plans' => $plans->map(fn (Plan $plan) => array_merge($plan->toArray(), [
-                'has_stripe_checkout' => ! empty($plan->stripe_price_id),
+                'has_creem_checkout' => ! empty($plan->creem_product_id),
+                'usd_price_in_cents' => $creemPrices[$plan->creem_product_id] ?? null,
             ])),
             'currentPlan' => $user->plan,
             'planExpiresAt' => $user->plan_expires_at?->toDateString(),
             'isPaidPlan' => $user->onPaidPlan(),
-            'isStripeSubscriber' => $user->subscribed('default'),
+            'isCreemSubscriber' => $user->hasActiveCreemSubscription(),
         ]);
+    }
+
+    /**
+     * Fetch USD prices from Creem for the given product IDs.
+     *
+     * @param  string[]  $productIds
+     * @return array<string, int|null>
+     */
+    private function fetchCreemPrices(array $productIds): array
+    {
+        $prices = [];
+
+        foreach ($productIds as $productId) {
+            try {
+                $product = Creem::getProduct($productId);
+                $prices[$productId] = isset($product['price']) ? (int) $product['price'] : null;
+            } catch (\Throwable) {
+                $prices[$productId] = null;
+            }
+        }
+
+        return $prices;
     }
 
     public function checkout(Request $request, Plan $plan): RedirectResponse
@@ -91,7 +116,7 @@ class BillingController extends Controller
         return response()->json(['status' => $status]);
     }
 
-    public function stripeCheckout(Request $request, Plan $plan): RedirectResponse|\Symfony\Component\HttpFoundation\Response
+    public function creemCheckout(Request $request, Plan $plan): RedirectResponse
     {
         $user = $request->user();
 
@@ -99,31 +124,33 @@ class BillingController extends Controller
             return back()->withErrors(['plan' => 'Plano gratuito não requer checkout.']);
         }
 
-        if (empty($plan->stripe_price_id)) {
+        if (empty($plan->creem_product_id)) {
             return back()->withErrors(['plan' => 'Este plano não está disponível para pagamento com cartão.']);
         }
 
-        if ($user->subscribed('default')) {
-            return $user->redirectToBillingPortal(route('billing.index'));
+        if ($user->hasActiveCreemSubscription()) {
+            return redirect()->route('billing.portal');
         }
 
-        $subscription = $user->newSubscription('default', $plan->stripe_price_id);
-
-        if ($plan->stripe_promo_price_id) {
-            $subscription->withCoupon($plan->stripe_promo_price_id);
-        }
-
-        $checkout = $subscription->checkout([
+        $checkout = $user->checkout($plan->creem_product_id, [
             'success_url' => route('billing.success'),
             'cancel_url' => route('billing.index'),
-        ])->toResponse($request);
+        ]);
 
-        return Inertia::location($checkout->getTargetUrl());
+        return Inertia::location($checkout['checkout_url']);
     }
 
     public function portal(Request $request): RedirectResponse
     {
-        return $request->user()->redirectToBillingPortal(route('billing.index'));
+        $user = $request->user();
+
+        if (! $user->hasCreemCustomerId()) {
+            return redirect()->route('billing.index');
+        }
+
+        $portal = $user->billingPortalUrl();
+
+        return redirect()->away($portal['customer_portal_link'] ?? $portal['url'] ?? route('billing.index'));
     }
 
     public function success(): Response

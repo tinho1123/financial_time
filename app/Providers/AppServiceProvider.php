@@ -2,14 +2,16 @@
 
 namespace App\Providers;
 
-use App\Listeners\StripeEventListener;
+use App\Listeners\CreemEventListener;
 use Carbon\CarbonImmutable;
+use Creem\Laravel\Events\CheckoutCompleted;
+use Creem\Laravel\Events\SubscriptionActive;
+use Creem\Laravel\Events\SubscriptionCanceled;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
-use Laravel\Cashier\Events\WebhookReceived;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -28,7 +30,9 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
 
-        Event::listen(WebhookReceived::class, StripeEventListener::class);
+        Event::listen(CheckoutCompleted::class, [CreemEventListener::class, 'handleCheckoutCompleted']);
+        Event::listen(SubscriptionActive::class, [CreemEventListener::class, 'handleSubscriptionActive']);
+        Event::listen(SubscriptionCanceled::class, [CreemEventListener::class, 'handleSubscriptionCanceled']);
     }
 
     /**

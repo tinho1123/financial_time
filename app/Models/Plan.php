@@ -22,8 +22,7 @@ class Plan extends Model
         'max_accounts',
         'max_categories',
         'has_advanced_charts',
-        'stripe_price_id',
-        'stripe_promo_price_id',
+        'creem_product_id',
     ];
 
     protected function casts(): array
