@@ -22,8 +22,8 @@ return new class extends Migration
             $table->unsignedTinyInteger('max_accounts')->nullable();
             $table->unsignedTinyInteger('max_categories')->nullable();
             $table->boolean('has_advanced_charts')->default(false);
-            $table->string('stripe_price_id')->nullable();
-            $table->string('stripe_promo_price_id')->nullable();
+            $table->string('creem_product_id')->nullable();
+            $table->boolean('has_creem_checkout')->default(false);
             $table->timestamps();
         });
     }

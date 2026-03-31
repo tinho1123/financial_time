@@ -23,6 +23,7 @@ class Plan extends Model
         'max_categories',
         'has_advanced_charts',
         'creem_product_id',
+        'has_creem_checkout',
     ];
 
     protected function casts(): array
@@ -35,6 +36,7 @@ class Plan extends Model
             'max_accounts' => 'integer',
             'max_categories' => 'integer',
             'has_advanced_charts' => 'boolean',
+            'has_creem_checkout' => 'boolean',
         ];
     }
 

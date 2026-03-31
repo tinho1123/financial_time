@@ -27,6 +27,7 @@ class PlanFactory extends Factory
             'max_categories' => 5,
             'has_advanced_charts' => false,
             'creem_product_id' => null,
+            'has_creem_checkout' => false,
         ];
     }
 
