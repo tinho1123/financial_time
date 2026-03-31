@@ -152,12 +152,9 @@ export function useLocalizedPrice(usdCents: number | null): {
     isLoading: boolean;
 } {
     const [price, setPrice] = useState<LocalizedPrice | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         if (usdCents === null || usdCents === 0) {
-            setIsLoading(false);
-
             return;
         }
 
@@ -189,11 +186,10 @@ export function useLocalizedPrice(usdCents: number | null): {
                     isUsd: true,
                     usdFormatted,
                 });
-            })
-            .finally(() => {
-                setIsLoading(false);
             });
     }, [usdCents]);
+
+    const isLoading = (usdCents !== null && usdCents !== 0) && price === null;
 
     return { price, isLoading };
 }
