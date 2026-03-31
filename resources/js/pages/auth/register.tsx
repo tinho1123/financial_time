@@ -11,7 +11,10 @@ import { store } from '@/routes/register';
 
 export default function Register() {
     return (
-        <AuthLayout title="Criar sua conta" description="Preencha os dados abaixo para começar gratuitamente">
+        <AuthLayout
+            title="Criar sua conta"
+            description="Preencha os dados abaixo para começar gratuitamente"
+        >
             <Head title="Cadastro — Financial Time" />
             <Form
                 {...store.form()}
@@ -23,7 +26,12 @@ export default function Register() {
                     <>
                         <div className="grid gap-5">
                             <div className="grid gap-2">
-                                <Label htmlFor="name" className="text-slate-300">Nome completo</Label>
+                                <Label
+                                    htmlFor="name"
+                                    className="text-slate-300"
+                                >
+                                    Nome completo
+                                </Label>
                                 <Input
                                     id="name"
                                     type="text"
@@ -39,7 +47,12 @@ export default function Register() {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="email" className="text-slate-300">E-mail</Label>
+                                <Label
+                                    htmlFor="email"
+                                    className="text-slate-300"
+                                >
+                                    E-mail
+                                </Label>
                                 <Input
                                     id="email"
                                     type="email"
@@ -54,7 +67,12 @@ export default function Register() {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="password" className="text-slate-300">Senha</Label>
+                                <Label
+                                    htmlFor="password"
+                                    className="text-slate-300"
+                                >
+                                    Senha
+                                </Label>
                                 <Input
                                     id="password"
                                     type="password"
@@ -69,7 +87,12 @@ export default function Register() {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="password_confirmation" className="text-slate-300">Confirmar senha</Label>
+                                <Label
+                                    htmlFor="password_confirmation"
+                                    className="text-slate-300"
+                                >
+                                    Confirmar senha
+                                </Label>
                                 <Input
                                     id="password_confirmation"
                                     type="password"
@@ -80,7 +103,9 @@ export default function Register() {
                                     placeholder="Repita a senha"
                                     className="border-white/10 bg-slate-800 text-white placeholder:text-slate-500 focus:border-emerald-500"
                                 />
-                                <InputError message={errors.password_confirmation} />
+                                <InputError
+                                    message={errors.password_confirmation}
+                                />
                             </div>
 
                             <Button
@@ -96,7 +121,11 @@ export default function Register() {
 
                         <div className="text-center text-sm text-slate-500">
                             Já tem uma conta?{' '}
-                            <TextLink href={login()} tabIndex={6} className="text-emerald-400 hover:text-emerald-300">
+                            <TextLink
+                                href={login()}
+                                tabIndex={6}
+                                className="text-emerald-400 hover:text-emerald-300"
+                            >
                                 Entrar
                             </TextLink>
                         </div>

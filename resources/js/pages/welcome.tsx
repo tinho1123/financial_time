@@ -12,165 +12,50 @@ const features = [
     {
         icon: '📊',
         title: 'Visão em tempo real',
-        description: 'Acompanhe receitas e despesas no momento em que acontecem. Sem surpresas no fim do mês.',
+        description:
+            'Acompanhe receitas e despesas no momento em que acontecem. Sem surpresas no fim do mês.',
     },
     {
         icon: '🏷️',
         title: 'Categorias inteligentes',
-        description: 'Organize seus gastos por categorias personalizadas e identifique para onde vai cada centavo.',
+        description:
+            'Organize seus gastos por categorias personalizadas e identifique para onde vai cada centavo.',
     },
     {
         icon: '🏦',
         title: 'Múltiplas contas',
-        description: 'Gerencie contas correntes, poupança, carteira e investimentos em um só lugar.',
+        description:
+            'Gerencie contas correntes, poupança, carteira e investimentos em um só lugar.',
     },
     {
         icon: '📈',
         title: 'Relatórios visuais',
-        description: 'Gráficos mensais de receitas x despesas para entender sua evolução financeira.',
+        description:
+            'Gráficos mensais de receitas x despesas para entender sua evolução financeira.',
     },
 ];
 
 const tips = [
-    { emoji: '💡', text: 'Anote cada gasto, por menor que seja. Pequenos valores se acumulam.' },
-    { emoji: '🎯', text: 'Defina metas mensais por categoria e acompanhe seu progresso.' },
-    { emoji: '🚫', text: 'Identifique assinaturas e gastos fixos desnecessários para cortar.' },
-    { emoji: '💰', text: 'Reserve pelo menos 10% da renda antes de gastar — pague a si mesmo primeiro.' },
+    {
+        emoji: '💡',
+        text: 'Anote cada gasto, por menor que seja. Pequenos valores se acumulam.',
+    },
+    {
+        emoji: '🎯',
+        text: 'Defina metas mensais por categoria e acompanhe seu progresso.',
+    },
+    {
+        emoji: '🚫',
+        text: 'Identifique assinaturas e gastos fixos desnecessários para cortar.',
+    },
+    {
+        emoji: '💰',
+        text: 'Reserve pelo menos 10% da renda antes de gastar — pague a si mesmo primeiro.',
+    },
 ];
 
-const freeFeatures = ['1 conta bancária', 'Até 5 categorias', 'Registro de transações', 'Histórico completo'];
-
-const paidFeatures = [
-    'Contas ilimitadas',
-    'Categorias ilimitadas',
-    'Gráficos avançados mensais',
-    'Breakdown por categoria',
-    'Relatórios completos',
-    'Suporte prioritário',
-];
-
-function formatPrice(cents: number): string {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100);
-}
-
-function PlanCard({ plan, highlight = false, canRegister }: { plan: Plan; highlight?: boolean; canRegister: boolean }) {
-    const isMonthly = plan.interval === 'monthly';
-    const isAnnual = plan.interval === 'annual';
-    const isFree = plan.interval === 'free';
+export default function Welcome({ canRegister = true }: WelcomeProps) {
     const { auth } = usePage().props;
-
-    return (
-        <div
-            className={`relative flex flex-col rounded-3xl p-8 ${
-                highlight
-                    ? 'bg-gradient-to-b from-emerald-500 to-emerald-600 text-white shadow-2xl shadow-emerald-500/30 ring-2 ring-emerald-400'
-                    : 'border border-white/10 bg-slate-900'
-            }`}
-        >
-            {highlight && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-amber-400 px-4 py-1 text-xs font-bold text-slate-900">
-                    MAIS POPULAR
-                </div>
-            )}
-
-            {isMonthly && plan.promo_price_in_cents && (
-                <div className="absolute -top-4 right-6 rounded-full bg-pink-500 px-3 py-1 text-xs font-bold text-white">
-                    PROMOÇÃO
-                </div>
-            )}
-
-            <div className="mb-6">
-                <h3 className={`mb-1 text-lg font-bold ${highlight ? 'text-white' : 'text-white'}`}>{plan.name}</h3>
-
-                {isFree && (
-                    <div className="mt-2">
-                        <span className="text-4xl font-extrabold">Grátis</span>
-                        <p className={`mt-1 text-sm ${highlight ? 'text-emerald-100' : 'text-slate-400'}`}>
-                            Para sempre
-                        </p>
-                    </div>
-                )}
-
-                {isMonthly && (
-                    <div className="mt-2">
-                        {plan.promo_price_in_cents ? (
-                            <>
-                                <span className="text-4xl font-extrabold">{formatPrice(plan.promo_price_in_cents)}</span>
-                                <span className={`text-sm ${highlight ? 'text-emerald-100' : 'text-slate-400'}`}>/mês</span>
-                                <p className={`mt-1 text-sm ${highlight ? 'text-emerald-100' : 'text-slate-400'}`}>
-                                    nos {plan.promo_months} primeiros meses, depois {formatPrice(plan.price_in_cents)}/mês
-                                </p>
-                            </>
-                        ) : (
-                            <>
-                                <span className="text-4xl font-extrabold">{formatPrice(plan.price_in_cents)}</span>
-                                <span className={`text-sm ${highlight ? 'text-emerald-100' : 'text-slate-400'}`}>/mês</span>
-                            </>
-                        )}
-                    </div>
-                )}
-
-                {isAnnual && (
-                    <div className="mt-2">
-                        <span className="text-4xl font-extrabold">{formatPrice(plan.price_in_cents)}</span>
-                        <span className={`text-sm ${highlight ? 'text-emerald-100' : 'text-slate-400'}`}>/ano</span>
-                        <p className={`mt-1 text-sm font-medium ${highlight ? 'text-emerald-100' : 'text-emerald-400'}`}>
-                            equivale a {formatPrice(Math.round(plan.price_in_cents / 12))}/mês — economize 2 meses
-                        </p>
-                    </div>
-                )}
-            </div>
-
-            <ul className="mb-8 flex flex-col gap-3 flex-1">
-                {(isFree ? freeFeatures : paidFeatures).map((feat) => (
-                    <li key={feat} className="flex items-center gap-2 text-sm">
-                        <span className={`text-base ${highlight ? 'text-white' : 'text-emerald-400'}`}>✓</span>
-                        <span className={highlight ? 'text-emerald-50' : 'text-slate-300'}>{feat}</span>
-                    </li>
-                ))}
-                {isFree && (
-                    <li className="flex items-center gap-2 text-sm">
-                        <span className="text-base text-slate-500">✗</span>
-                        <span className="text-slate-500">Gráficos avançados</span>
-                    </li>
-                )}
-            </ul>
-
-            {auth.user ? (
-                <Link
-                    href={dashboard()}
-                    className={`rounded-full py-3 text-center text-sm font-bold transition ${
-                        highlight
-                            ? 'bg-white text-emerald-700 hover:bg-emerald-50'
-                            : 'border border-white/20 text-white hover:bg-white/10'
-                    }`}
-                >
-                    Acessar painel
-                </Link>
-            ) : canRegister ? (
-                <Link
-                    href={register()}
-                    className={`rounded-full py-3 text-center text-sm font-bold transition ${
-                        highlight
-                            ? 'bg-white text-emerald-700 hover:bg-emerald-50'
-                            : isFree
-                              ? 'border border-white/20 text-white hover:bg-white/10'
-                              : 'bg-emerald-500 text-white hover:bg-emerald-400'
-                    }`}
-                >
-                    {isFree ? 'Começar grátis' : 'Assinar agora'}
-                </Link>
-            ) : null}
-        </div>
-    );
-}
-
-export default function Welcome({ canRegister = true, plans }: WelcomeProps) {
-    const { auth } = usePage().props;
-
-    const freePlan = plans.find((p) => p.interval === 'free');
-    const monthlyPlan = plans.find((p) => p.interval === 'monthly');
-    const annualPlan = plans.find((p) => p.interval === 'annual');
 
     return (
         <>
@@ -183,7 +68,8 @@ export default function Welcome({ canRegister = true, plans }: WelcomeProps) {
                         <div className="flex items-center gap-2">
                             <span className="text-2xl">⏱️</span>
                             <span className="text-xl font-bold tracking-tight">
-                                Financial<span className="text-emerald-400">Time</span>
+                                Financial
+                                <span className="text-emerald-400">Time</span>
                             </span>
                         </div>
                         <div className="flex items-center gap-3">
@@ -229,7 +115,7 @@ export default function Welcome({ canRegister = true, plans }: WelcomeProps) {
                             Seu dinheiro, sob controle
                         </div>
 
-                        <h1 className="mb-6 text-5xl font-extrabold leading-tight tracking-tight md:text-7xl">
+                        <h1 className="mb-6 text-5xl leading-tight font-extrabold tracking-tight md:text-7xl">
                             Pare de{' '}
                             <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
                                 perder dinheiro
@@ -238,8 +124,10 @@ export default function Welcome({ canRegister = true, plans }: WelcomeProps) {
                         </h1>
 
                         <p className="mx-auto mb-10 max-w-2xl text-lg text-slate-400 md:text-xl">
-                            O Financial Time é um sistema de gestão financeira pessoal que te ajuda a registrar,
-                            categorizar e entender seus gastos — para você tomar decisões com consciência.
+                            O Financial Time é um sistema de gestão financeira
+                            pessoal que te ajuda a registrar, categorizar e
+                            entender seus gastos — para você tomar decisões com
+                            consciência.
                         </p>
 
                         <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
@@ -275,9 +163,13 @@ export default function Welcome({ canRegister = true, plans }: WelcomeProps) {
                         <div className="mb-16 text-center">
                             <h2 className="mb-4 text-3xl font-bold md:text-4xl">
                                 Tudo que você precisa para{' '}
-                                <span className="text-emerald-400">organizar sua vida financeira</span>
+                                <span className="text-emerald-400">
+                                    organizar sua vida financeira
+                                </span>
                             </h2>
-                            <p className="text-slate-400">Ferramentas simples, resultados poderosos.</p>
+                            <p className="text-slate-400">
+                                Ferramentas simples, resultados poderosos.
+                            </p>
                         </div>
 
                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -286,9 +178,15 @@ export default function Welcome({ canRegister = true, plans }: WelcomeProps) {
                                     key={feature.title}
                                     className="rounded-2xl border border-white/10 bg-slate-900 p-6 transition hover:border-emerald-500/40 hover:bg-slate-800/80"
                                 >
-                                    <div className="mb-4 text-4xl">{feature.icon}</div>
-                                    <h3 className="mb-2 font-semibold text-white">{feature.title}</h3>
-                                    <p className="text-sm leading-relaxed text-slate-400">{feature.description}</p>
+                                    <div className="mb-4 text-4xl">
+                                        {feature.icon}
+                                    </div>
+                                    <h3 className="mb-2 font-semibold text-white">
+                                        {feature.title}
+                                    </h3>
+                                    <p className="text-sm leading-relaxed text-slate-400">
+                                        {feature.description}
+                                    </p>
                                 </div>
                             ))}
                         </div>
@@ -349,8 +247,12 @@ export default function Welcome({ canRegister = true, plans }: WelcomeProps) {
                                     key={tip.text}
                                     className="flex items-start gap-4 rounded-2xl border border-violet-500/20 bg-violet-500/5 p-5"
                                 >
-                                    <span className="mt-0.5 text-2xl">{tip.emoji}</span>
-                                    <p className="text-sm leading-relaxed text-slate-300">{tip.text}</p>
+                                    <span className="mt-0.5 text-2xl">
+                                        {tip.emoji}
+                                    </span>
+                                    <p className="text-sm leading-relaxed text-slate-300">
+                                        {tip.text}
+                                    </p>
                                 </div>
                             ))}
                         </div>
@@ -364,7 +266,8 @@ export default function Welcome({ canRegister = true, plans }: WelcomeProps) {
                             Sua saúde financeira começa hoje
                         </h2>
                         <p className="mb-8 text-slate-800">
-                            Registre sua primeira transação em menos de 1 minuto.
+                            Registre sua primeira transação em menos de 1
+                            minuto.
                         </p>
                         {!auth.user && canRegister && (
                             <Link
@@ -390,10 +293,13 @@ export default function Welcome({ canRegister = true, plans }: WelcomeProps) {
                     <div className="mb-2 flex items-center justify-center gap-2">
                         <span className="text-xl">⏱️</span>
                         <span className="font-bold">
-                            Financial<span className="text-emerald-400">Time</span>
+                            Financial
+                            <span className="text-emerald-400">Time</span>
                         </span>
                     </div>
-                    <p className="text-sm text-slate-500">Feito para quem leva o futuro a sério.</p>
+                    <p className="text-sm text-slate-500">
+                        Feito para quem leva o futuro a sério.
+                    </p>
                 </footer>
             </div>
         </>

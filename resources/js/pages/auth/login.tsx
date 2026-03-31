@@ -23,7 +23,10 @@ export default function Login({
     canRegister,
 }: Props) {
     return (
-        <AuthLayout title="Entrar na sua conta" description="Acesse seu painel de controle financeiro">
+        <AuthLayout
+            title="Entrar na sua conta"
+            description="Acesse seu painel de controle financeiro"
+        >
             <Head title="Entrar — Financial Time" />
 
             {status && (
@@ -41,7 +44,12 @@ export default function Login({
                     <>
                         <div className="grid gap-5">
                             <div className="grid gap-2">
-                                <Label htmlFor="email" className="text-slate-300">E-mail</Label>
+                                <Label
+                                    htmlFor="email"
+                                    className="text-slate-300"
+                                >
+                                    E-mail
+                                </Label>
                                 <Input
                                     id="email"
                                     type="email"
@@ -58,7 +66,12 @@ export default function Login({
 
                             <div className="grid gap-2">
                                 <div className="flex items-center">
-                                    <Label htmlFor="password" className="text-slate-300">Senha</Label>
+                                    <Label
+                                        htmlFor="password"
+                                        className="text-slate-300"
+                                    >
+                                        Senha
+                                    </Label>
                                     {canResetPassword && (
                                         <TextLink
                                             href={request()}
@@ -83,8 +96,17 @@ export default function Login({
                             </div>
 
                             <div className="flex items-center space-x-3">
-                                <Checkbox id="remember" name="remember" tabIndex={3} />
-                                <Label htmlFor="remember" className="text-slate-400">Lembrar de mim</Label>
+                                <Checkbox
+                                    id="remember"
+                                    name="remember"
+                                    tabIndex={3}
+                                />
+                                <Label
+                                    htmlFor="remember"
+                                    className="text-slate-400"
+                                >
+                                    Lembrar de mim
+                                </Label>
                             </div>
 
                             <Button
@@ -102,7 +124,11 @@ export default function Login({
                         {canRegister && (
                             <div className="text-center text-sm text-slate-500">
                                 Não tem uma conta?{' '}
-                                <TextLink href={register()} tabIndex={5} className="text-emerald-400 hover:text-emerald-300">
+                                <TextLink
+                                    href={register()}
+                                    tabIndex={5}
+                                    className="text-emerald-400 hover:text-emerald-300"
+                                >
                                     Criar conta grátis
                                 </TextLink>
                             </div>

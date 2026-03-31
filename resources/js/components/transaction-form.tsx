@@ -1,7 +1,9 @@
-import { useForm } from '@inertiajs/react';
+import { Link, useForm } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import accountsRoute from '@/routes/accounts';
+import categoriesRoute from '@/routes/categories';
 import transactions from '@/routes/transactions';
 import type { Account, Category, Transaction } from '@/types';
 
@@ -24,21 +26,40 @@ export function TransactionForm({
 
     const { data, setData, post, put, processing, errors } = useForm({
         type: transaction?.type ?? 'expense',
-        account_id: transaction?.account_id ?? (accounts[0]?.id ?? ''),
+        account_id: transaction?.account_id ?? accounts[0]?.id ?? '',
         category_id: transaction?.category_id ?? '',
-        amount_in_cents: transaction ? (transaction.amount_in_cents / 100).toFixed(2) : '',
+        amount_in_cents: transaction
+            ? (transaction.amount_in_cents / 100).toFixed(2)
+            : '',
         description: transaction?.description ?? '',
         date: transaction?.date ?? new Date().toISOString().slice(0, 10),
         notes: transaction?.notes ?? '',
     });
 
-    const activeCategories = data.type === 'income' ? incomeCategories : expenseCategories;
+    if (!isEditing && accounts.length === 0) {
+        return (
+            <div className="space-y-4 py-6 text-center">
+                <p className="text-sm text-muted-foreground">
+                    Você precisa ter pelo menos uma conta para registrar uma
+                    transação.
+                </p>
+                <Button asChild>
+                    <Link href={accountsRoute.index.url()}>Criar conta</Link>
+                </Button>
+            </div>
+        );
+    }
+
+    const activeCategories =
+        data.type === 'income' ? incomeCategories : expenseCategories;
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
 
         if (isEditing && transaction) {
-            put(transactions.update.url(transaction.id), { onSuccess: () => onSuccess?.() });
+            put(transactions.update.url(transaction.id), {
+                onSuccess: () => onSuccess?.(),
+            });
         } else {
             post(transactions.store.url(), { onSuccess: () => onSuccess?.() });
         }
@@ -77,8 +98,10 @@ export function TransactionForm({
                     <select
                         id="tx-account"
                         value={data.account_id}
-                        onChange={(e) => setData('account_id', Number(e.target.value))}
-                        className="border-input flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                        onChange={(e) =>
+                            setData('account_id', Number(e.target.value))
+                        }
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                         aria-invalid={Boolean(errors.account_id)}
                     >
                         {accounts.map((a) => (
@@ -87,7 +110,11 @@ export function TransactionForm({
                             </option>
                         ))}
                     </select>
-                    {errors.account_id && <p className="text-xs text-destructive">{errors.account_id}</p>}
+                    {errors.account_id && (
+                        <p className="text-xs text-destructive">
+                            {errors.account_id}
+                        </p>
+                    )}
                 </div>
 
                 <div className="space-y-1.5">
@@ -98,11 +125,17 @@ export function TransactionForm({
                         min="0.01"
                         step="0.01"
                         value={data.amount_in_cents}
-                        onChange={(e) => setData('amount_in_cents', e.target.value)}
+                        onChange={(e) =>
+                            setData('amount_in_cents', e.target.value)
+                        }
                         placeholder="0,00"
                         aria-invalid={Boolean(errors.amount_in_cents)}
                     />
-                    {errors.amount_in_cents && <p className="text-xs text-destructive">{errors.amount_in_cents}</p>}
+                    {errors.amount_in_cents && (
+                        <p className="text-xs text-destructive">
+                            {errors.amount_in_cents}
+                        </p>
+                    )}
                 </div>
             </div>
 
@@ -115,7 +148,11 @@ export function TransactionForm({
                     placeholder="Ex: Supermercado"
                     aria-invalid={Boolean(errors.description)}
                 />
-                {errors.description && <p className="text-xs text-destructive">{errors.description}</p>}
+                {errors.description && (
+                    <p className="text-xs text-destructive">
+                        {errors.description}
+                    </p>
+                )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -124,8 +161,13 @@ export function TransactionForm({
                     <select
                         id="tx-category"
                         value={data.category_id ?? ''}
-                        onChange={(e) => setData('category_id', e.target.value ? Number(e.target.value) : '')}
-                        className="border-input flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                        onChange={(e) =>
+                            setData(
+                                'category_id',
+                                e.target.value ? Number(e.target.value) : '',
+                            )
+                        }
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                     >
                         <option value="">Sem categoria</option>
                         {activeCategories.map((c) => (
@@ -134,6 +176,17 @@ export function TransactionForm({
                             </option>
                         ))}
                     </select>
+                    {activeCategories.length === 0 && (
+                        <p className="text-xs text-muted-foreground">
+                            Sem categorias para este tipo.{' '}
+                            <Link
+                                href={categoriesRoute.index.url()}
+                                className="underline hover:text-foreground"
+                            >
+                                Criar categoria
+                            </Link>
+                        </p>
+                    )}
                 </div>
 
                 <div className="space-y-1.5">
@@ -145,7 +198,11 @@ export function TransactionForm({
                         onChange={(e) => setData('date', e.target.value)}
                         aria-invalid={Boolean(errors.date)}
                     />
-                    {errors.date && <p className="text-xs text-destructive">{errors.date}</p>}
+                    {errors.date && (
+                        <p className="text-xs text-destructive">
+                            {errors.date}
+                        </p>
+                    )}
                 </div>
             </div>
 

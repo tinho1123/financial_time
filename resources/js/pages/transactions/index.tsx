@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { useForm } from '@inertiajs/react';
 import { Head, router } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import { AmountDisplay } from '@/components/amount-display';
 import { TransactionForm } from '@/components/transaction-form';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,13 @@ import {
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
 import transactionsRoute from '@/routes/transactions';
-import type { Account, BreadcrumbItem, Category, PaginatedTransactions, Transaction } from '@/types';
+import type {
+    Account,
+    BreadcrumbItem,
+    Category,
+    PaginatedTransactions,
+    Transaction,
+} from '@/types';
 
 interface TransactionsPageProps {
     transactions: PaginatedTransactions;
@@ -42,7 +48,9 @@ export default function TransactionsIndex({
     filters,
 }: TransactionsPageProps) {
     const [createOpen, setCreateOpen] = useState(false);
-    const [editTransaction, setEditTransaction] = useState<Transaction | null>(null);
+    const [editTransaction, setEditTransaction] = useState<Transaction | null>(
+        null,
+    );
 
     const allCategories = [...incomeCategories, ...expenseCategories];
 
@@ -68,7 +76,7 @@ export default function TransactionsIndex({
                     <select
                         value={filters.type ?? ''}
                         onChange={(e) => handleFilter('type', e.target.value)}
-                        className="border-input h-9 rounded-md border bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                        className="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                     >
                         <option value="">Todos os tipos</option>
                         <option value="income">Receitas</option>
@@ -77,8 +85,10 @@ export default function TransactionsIndex({
 
                     <select
                         value={filters.account_id ?? ''}
-                        onChange={(e) => handleFilter('account_id', e.target.value)}
-                        className="border-input h-9 rounded-md border bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                        onChange={(e) =>
+                            handleFilter('account_id', e.target.value)
+                        }
+                        className="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                     >
                         <option value="">Todas as contas</option>
                         {accounts.map((a) => (
@@ -90,8 +100,10 @@ export default function TransactionsIndex({
 
                     <select
                         value={filters.category_id ?? ''}
-                        onChange={(e) => handleFilter('category_id', e.target.value)}
-                        className="border-input h-9 rounded-md border bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                        onChange={(e) =>
+                            handleFilter('category_id', e.target.value)
+                        }
+                        className="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                     >
                         <option value="">Todas as categorias</option>
                         {allCategories.map((c) => (
@@ -116,7 +128,10 @@ export default function TransactionsIndex({
                         placeholder="Até"
                     />
 
-                    <Button className="ml-auto" onClick={() => setCreateOpen(true)}>
+                    <Button
+                        className="ml-auto"
+                        onClick={() => setCreateOpen(true)}
+                    >
                         <Plus className="size-4" />
                         Nova transação
                     </Button>
@@ -124,7 +139,9 @@ export default function TransactionsIndex({
 
                 <div className="rounded-lg border">
                     {transactions.data.length === 0 ? (
-                        <p className="p-6 text-center text-sm text-muted-foreground">Nenhuma transação encontrada.</p>
+                        <p className="p-6 text-center text-sm text-muted-foreground">
+                            Nenhuma transação encontrada.
+                        </p>
                     ) : (
                         <div className="divide-y">
                             {transactions.data.map((tx) => (
@@ -171,7 +188,10 @@ export default function TransactionsIndex({
                 </DialogContent>
             </Dialog>
 
-            <Dialog open={Boolean(editTransaction)} onOpenChange={(open) => !open && setEditTransaction(null)}>
+            <Dialog
+                open={Boolean(editTransaction)}
+                onOpenChange={(open) => !open && setEditTransaction(null)}
+            >
                 <DialogContent className="sm:max-w-lg">
                     <DialogHeader>
                         <DialogTitle>Editar transação</DialogTitle>
@@ -191,7 +211,13 @@ export default function TransactionsIndex({
     );
 }
 
-function TransactionRow({ transaction: tx, onEdit }: { transaction: Transaction; onEdit: (t: Transaction) => void }) {
+function TransactionRow({
+    transaction: tx,
+    onEdit,
+}: {
+    transaction: Transaction;
+    onEdit: (t: Transaction) => void;
+}) {
     const { delete: destroy, processing } = useForm();
 
     function handleDelete() {
@@ -205,7 +231,10 @@ function TransactionRow({ transaction: tx, onEdit }: { transaction: Transaction;
         <div className="flex items-center gap-4 px-4 py-3">
             <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted">
                 {tx.category ? (
-                    <span className="size-3 rounded-full" style={{ backgroundColor: tx.category.color }} />
+                    <span
+                        className="size-3 rounded-full"
+                        style={{ backgroundColor: tx.category.color }}
+                    />
                 ) : (
                     <span className="size-3 rounded-full bg-muted-foreground/30" />
                 )}
@@ -218,9 +247,19 @@ function TransactionRow({ transaction: tx, onEdit }: { transaction: Transaction;
                     {tx.account && ` · ${tx.account.name}`}
                 </p>
             </div>
-            <AmountDisplay amountInCents={tx.amount_in_cents} type={tx.type} showSign className="shrink-0" />
+            <AmountDisplay
+                amountInCents={tx.amount_in_cents}
+                type={tx.type}
+                showSign
+                className="shrink-0"
+            />
             <div className="flex shrink-0 gap-1">
-                <Button size="icon" variant="ghost" className="size-8" onClick={() => onEdit(tx)}>
+                <Button
+                    size="icon"
+                    variant="ghost"
+                    className="size-8"
+                    onClick={() => onEdit(tx)}
+                >
                     <Pencil className="size-3.5" />
                 </Button>
                 <Button

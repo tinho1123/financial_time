@@ -1,5 +1,5 @@
-import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/lib/currency';
+import { cn } from '@/lib/utils';
 import type { TransactionType } from '@/types';
 
 interface AmountDisplayProps {
@@ -9,7 +9,12 @@ interface AmountDisplayProps {
     className?: string;
 }
 
-export function AmountDisplay({ amountInCents, type, showSign = false, className }: AmountDisplayProps) {
+export function AmountDisplay({
+    amountInCents,
+    type,
+    showSign = false,
+    className,
+}: AmountDisplayProps) {
     const isIncome = type === 'income';
     const isExpense = type === 'expense';
 
