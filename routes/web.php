@@ -38,9 +38,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 Route::post('/pix/webhook', [PixWebhookController::class, 'handle'])->name('pix.webhook');
-<<<<<<< HEAD
-=======
 Route::get('/currency/rates', [CurrencyController::class, 'rates'])->name('currency.rates');
->>>>>>> e992392253ef5471dd7353a54397b6b74ff17e13
 
 require __DIR__.'/settings.php';
