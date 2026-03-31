@@ -1,6 +1,7 @@
 import { router, useForm } from '@inertiajs/react';
 import { Head } from '@inertiajs/react';
 import { CheckCircle2, CreditCard, QrCode } from 'lucide-react';
+import { LocalizedPrice, LocalizedPriceDisclaimer } from '@/components/localized-price';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,7 +12,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
-import { formatCurrency, formatUsdCurrency } from '@/lib/currency';
+import { formatCurrency } from '@/lib/currency';
 import billingRoute from '@/routes/billing';
 import type { BreadcrumbItem, Plan } from '@/types';
 
@@ -74,6 +75,7 @@ function PlanCard({
     }
 
     const isCurrentAndPaid = isCurrent && isPaidPlan;
+    const hasCreemPrice = plan.has_creem_checkout && plan.usd_price_in_cents;
 
     return (
         <Card
@@ -92,7 +94,9 @@ function PlanCard({
                             )}
                     </div>
                 </div>
-                <div className="mt-2">
+
+                <div className="mt-2 space-y-1">
+                    {/* PIX / BRL price */}
                     {isFree ? (
                         <p className="text-3xl font-bold">Grátis</p>
                     ) : plan.interval === 'monthly' ? (
@@ -100,9 +104,7 @@ function PlanCard({
                             {plan.promo_price_in_cents ? (
                                 <>
                                     <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-                                        {formatCurrency(
-                                            plan.promo_price_in_cents,
-                                        )}
+                                        {formatCurrency(plan.promo_price_in_cents)}
                                         <span className="text-base font-normal text-muted-foreground">
                                             /mês
                                         </span>
@@ -111,9 +113,7 @@ function PlanCard({
                                         nos {plan.promo_months} primeiros meses,
                                         depois{' '}
                                         <span className="font-medium">
-                                            {formatCurrency(
-                                                plan.price_in_cents,
-                                            )}
+                                            {formatCurrency(plan.price_in_cents)}
                                             /mês
                                         </span>
                                     </p>
@@ -138,13 +138,23 @@ function PlanCard({
                             <p className="text-sm text-muted-foreground">
                                 equivale a{' '}
                                 <span className="font-medium text-green-600 dark:text-green-400">
-                                    {formatCurrency(
-                                        Math.round(plan.price_in_cents / 12),
-                                    )}
+                                    {formatCurrency(Math.round(plan.price_in_cents / 12))}
                                     /mês
                                 </span>
                             </p>
                         </>
+                    )}
+
+                    {/* Localized card price (Creem / USD) */}
+                    {hasCreemPrice && (
+                        <p className="text-sm text-muted-foreground">
+                            Cartão:{' '}
+                            <LocalizedPrice
+                                usdCents={plan.usd_price_in_cents!}
+                                interval={plan.interval}
+                            />
+                            *
+                        </p>
                     )}
                 </div>
             </CardHeader>
@@ -169,7 +179,11 @@ function PlanCard({
                         {isCurrent && !isPaidPlan ? 'Plano atual' : 'Grátis'}
                     </Button>
                 ) : isCurrentAndPaid && isCreemSubscriber ? (
-                    <Button variant="outline" className="w-full" onClick={handlePortal}>
+                    <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={handlePortal}
+                    >
                         <CreditCard className="mr-2 size-4" />
                         Gerenciar assinatura
                     </Button>
@@ -188,14 +202,14 @@ function PlanCard({
                             Pagar via PIX
                         </Button>
                         {plan.has_creem_checkout && (
-                            <Button variant="outline" className="w-full" onClick={handleCreemCheckout} disabled={processing}>
+                            <Button
+                                variant="outline"
+                                className="w-full"
+                                onClick={handleCreemCheckout}
+                                disabled={processing}
+                            >
                                 <CreditCard className="mr-2 size-4" />
                                 Pagar com Cartão
-                                {plan.usd_price_in_cents && (
-                                    <span className="ml-1 text-xs text-muted-foreground">
-                                        ({formatUsdCurrency(plan.usd_price_in_cents)}{plan.interval === 'annual' ? '/yr' : '/mo'})
-                                    </span>
-                                )}
                             </Button>
                         )}
                     </>
@@ -205,7 +219,15 @@ function PlanCard({
     );
 }
 
-export default function BillingIndex({ plans, currentPlan, planExpiresAt, isPaidPlan, isCreemSubscriber }: BillingPageProps) {
+export default function BillingIndex({
+    plans,
+    currentPlan,
+    planExpiresAt,
+    isPaidPlan,
+    isCreemSubscriber,
+}: BillingPageProps) {
+    const hasCreemPlans = plans.some((p) => p.has_creem_checkout);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Cobrança" />
@@ -251,6 +273,8 @@ export default function BillingIndex({ plans, currentPlan, planExpiresAt, isPaid
                         />
                     ))}
                 </div>
+
+                {hasCreemPlans && <LocalizedPriceDisclaimer />}
             </div>
         </AppLayout>
     );

@@ -3,6 +3,7 @@
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PixWebhookController;
 use App\Http\Controllers\TransactionController;
@@ -37,5 +38,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 Route::post('/pix/webhook', [PixWebhookController::class, 'handle'])->name('pix.webhook');
+Route::get('/currency/rates', [CurrencyController::class, 'rates'])->name('currency.rates');
 
 require __DIR__.'/settings.php';
