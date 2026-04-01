@@ -12,6 +12,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class BillingController extends Controller
 {
@@ -116,7 +117,7 @@ class BillingController extends Controller
         return response()->json(['status' => $status]);
     }
 
-    public function creemCheckout(Request $request, Plan $plan): RedirectResponse
+    public function creemCheckout(Request $request, Plan $plan): SymfonyResponse
     {
         $user = $request->user();
 
