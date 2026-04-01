@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { useForm } from '@inertiajs/react';
 import { Head } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import { AmountDisplay } from '@/components/amount-display';
 import { PlanLimitBanner } from '@/components/plan-limit-banner';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import accountsRoute from '@/routes/accounts';
 import type { Account, BreadcrumbItem } from '@/types';
+import type { AccountType } from '@/types/finance';
 
 interface AccountsPageProps {
     accounts: Account[];
@@ -47,14 +48,18 @@ function AccountForm({ account, onSuccess }: AccountFormProps) {
         name: account?.name ?? '',
         type: account?.type ?? 'checking',
         currency: account?.currency ?? 'BRL',
-        initial_balance_in_cents: account ? (account.initial_balance_in_cents / 100).toFixed(2) : '0.00',
+        initial_balance_in_cents: account
+            ? (account.initial_balance_in_cents / 100).toFixed(2)
+            : '0.00',
     });
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
 
         if (isEditing && account) {
-            put(accountsRoute.update.url(account.id), { onSuccess: () => onSuccess?.() });
+            put(accountsRoute.update.url(account.id), {
+                onSuccess: () => onSuccess?.(),
+            });
         } else {
             post(accountsRoute.store.url(), { onSuccess: () => onSuccess?.() });
         }
@@ -71,7 +76,9 @@ function AccountForm({ account, onSuccess }: AccountFormProps) {
                     placeholder="Ex: Nubank"
                     aria-invalid={Boolean(errors.name)}
                 />
-                {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
+                {errors.name && (
+                    <p className="text-xs text-destructive">{errors.name}</p>
+                )}
             </div>
 
             <div className="space-y-1.5">
@@ -79,16 +86,22 @@ function AccountForm({ account, onSuccess }: AccountFormProps) {
                 <select
                     id="acc-type"
                     value={data.type}
-                    onChange={(e) => setData('type', e.target.value)}
-                    className="border-input flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                    onChange={(e) =>
+                        setData('type', e.target.value as AccountType)
+                    }
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 >
-                    {Object.entries(ACCOUNT_TYPE_LABELS).map(([value, label]) => (
-                        <option key={value} value={value}>
-                            {label}
-                        </option>
-                    ))}
+                    {Object.entries(ACCOUNT_TYPE_LABELS).map(
+                        ([value, label]) => (
+                            <option key={value} value={value}>
+                                {label}
+                            </option>
+                        ),
+                    )}
                 </select>
-                {errors.type && <p className="text-xs text-destructive">{errors.type}</p>}
+                {errors.type && (
+                    <p className="text-xs text-destructive">{errors.type}</p>
+                )}
             </div>
 
             <div className="space-y-1.5">
@@ -97,7 +110,7 @@ function AccountForm({ account, onSuccess }: AccountFormProps) {
                     id="acc-currency"
                     value={data.currency}
                     onChange={(e) => setData('currency', e.target.value)}
-                    className="border-input flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 >
                     <option value="BRL">BRL — Real Brasileiro (R$)</option>
                     <option value="USD">USD — Dólar Americano ($)</option>
@@ -108,21 +121,31 @@ function AccountForm({ account, onSuccess }: AccountFormProps) {
                     <option value="CAD">CAD — Dólar Canadense</option>
                     <option value="CHF">CHF — Franco Suíço</option>
                 </select>
-                {errors.currency && <p className="text-xs text-destructive">{errors.currency}</p>}
+                {errors.currency && (
+                    <p className="text-xs text-destructive">
+                        {errors.currency}
+                    </p>
+                )}
             </div>
 
             <div className="space-y-1.5">
-                <Label htmlFor="acc-balance">Saldo inicial ({data.currency})</Label>
+                <Label htmlFor="acc-balance">
+                    Saldo inicial ({data.currency})
+                </Label>
                 <Input
                     id="acc-balance"
                     type="number"
                     step="0.01"
                     value={data.initial_balance_in_cents}
-                    onChange={(e) => setData('initial_balance_in_cents', e.target.value)}
+                    onChange={(e) =>
+                        setData('initial_balance_in_cents', e.target.value)
+                    }
                     aria-invalid={Boolean(errors.initial_balance_in_cents)}
                 />
                 {errors.initial_balance_in_cents && (
-                    <p className="text-xs text-destructive">{errors.initial_balance_in_cents}</p>
+                    <p className="text-xs text-destructive">
+                        {errors.initial_balance_in_cents}
+                    </p>
                 )}
             </div>
 
@@ -133,11 +156,21 @@ function AccountForm({ account, onSuccess }: AccountFormProps) {
     );
 }
 
-function AccountCard({ account, onEdit }: { account: Account; onEdit: (a: Account) => void }) {
+function AccountCard({
+    account,
+    onEdit,
+}: {
+    account: Account;
+    onEdit: (a: Account) => void;
+}) {
     const { delete: destroy, processing } = useForm();
 
     function handleDelete() {
-        if (!confirm(`Excluir a conta "${account.name}"? Todas as transações também serão excluídas.`)) {
+        if (
+            !confirm(
+                `Excluir a conta "${account.name}"? Todas as transações também serão excluídas.`,
+            )
+        ) {
             return;
         }
         destroy(accountsRoute.destroy.url(account.id));
@@ -148,11 +181,20 @@ function AccountCard({ account, onEdit }: { account: Account; onEdit: (a: Accoun
             <CardHeader className="pb-2">
                 <div className="flex items-start justify-between">
                     <div>
-                        <CardTitle className="text-base">{account.name}</CardTitle>
-                        <p className="text-xs text-muted-foreground">{ACCOUNT_TYPE_LABELS[account.type]}</p>
+                        <CardTitle className="text-base">
+                            {account.name}
+                        </CardTitle>
+                        <p className="text-xs text-muted-foreground">
+                            {ACCOUNT_TYPE_LABELS[account.type]}
+                        </p>
                     </div>
                     <div className="flex gap-1">
-                        <Button size="icon" variant="ghost" className="size-8" onClick={() => onEdit(account)}>
+                        <Button
+                            size="icon"
+                            variant="ghost"
+                            className="size-8"
+                            onClick={() => onEdit(account)}
+                        >
                             <Pencil className="size-3.5" />
                         </Button>
                         <Button
@@ -170,16 +212,25 @@ function AccountCard({ account, onEdit }: { account: Account; onEdit: (a: Accoun
             <CardContent>
                 <AmountDisplay
                     amountInCents={Math.abs(account.current_balance_in_cents)}
-                    type={account.current_balance_in_cents >= 0 ? 'income' : 'expense'}
+                    type={
+                        account.current_balance_in_cents >= 0
+                            ? 'income'
+                            : 'expense'
+                    }
                     className="text-2xl"
                 />
-                <p className="mt-0.5 text-xs text-muted-foreground">Saldo atual</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                    Saldo atual
+                </p>
             </CardContent>
         </Card>
     );
 }
 
-export default function AccountsIndex({ accounts, canAddMore }: AccountsPageProps) {
+export default function AccountsIndex({
+    accounts,
+    canAddMore,
+}: AccountsPageProps) {
     const [createOpen, setCreateOpen] = useState(false);
     const [editAccount, setEditAccount] = useState<Account | null>(null);
 
@@ -193,18 +244,27 @@ export default function AccountsIndex({ accounts, canAddMore }: AccountsPageProp
 
                 <div className="flex items-center justify-between">
                     <h1 className="text-lg font-semibold">Suas contas</h1>
-                    <Button disabled={!canAddMore} onClick={() => setCreateOpen(true)}>
+                    <Button
+                        disabled={!canAddMore}
+                        onClick={() => setCreateOpen(true)}
+                    >
                         <Plus className="size-4" />
                         Nova conta
                     </Button>
                 </div>
 
                 {accounts.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Nenhuma conta cadastrada.</p>
+                    <p className="text-sm text-muted-foreground">
+                        Nenhuma conta cadastrada.
+                    </p>
                 ) : (
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {accounts.map((account) => (
-                            <AccountCard key={account.id} account={account} onEdit={setEditAccount} />
+                            <AccountCard
+                                key={account.id}
+                                account={account}
+                                onEdit={setEditAccount}
+                            />
                         ))}
                     </div>
                 )}
@@ -219,13 +279,19 @@ export default function AccountsIndex({ accounts, canAddMore }: AccountsPageProp
                 </DialogContent>
             </Dialog>
 
-            <Dialog open={Boolean(editAccount)} onOpenChange={(open) => !open && setEditAccount(null)}>
+            <Dialog
+                open={Boolean(editAccount)}
+                onOpenChange={(open) => !open && setEditAccount(null)}
+            >
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Editar conta</DialogTitle>
                     </DialogHeader>
                     {editAccount && (
-                        <AccountForm account={editAccount} onSuccess={() => setEditAccount(null)} />
+                        <AccountForm
+                            account={editAccount}
+                            onSuccess={() => setEditAccount(null)}
+                        />
                     )}
                 </DialogContent>
             </Dialog>

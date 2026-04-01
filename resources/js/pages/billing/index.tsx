@@ -1,7 +1,10 @@
 import { router, useForm } from '@inertiajs/react';
 import { Head } from '@inertiajs/react';
 import { CheckCircle2, CreditCard } from 'lucide-react';
-import { LocalizedPrice, LocalizedPriceDisclaimer } from '@/components/localized-price';
+import {
+    LocalizedPrice,
+    LocalizedPriceDisclaimer,
+} from '@/components/localized-price';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -100,7 +103,9 @@ function PlanCard({
                             {plan.promo_price_in_cents ? (
                                 <>
                                     <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-                                        {formatCurrency(plan.promo_price_in_cents)}
+                                        {formatCurrency(
+                                            plan.promo_price_in_cents,
+                                        )}
                                         <span className="text-base font-normal text-muted-foreground">
                                             /mês
                                         </span>
@@ -109,7 +114,9 @@ function PlanCard({
                                         nos {plan.promo_months} primeiros meses,
                                         depois{' '}
                                         <span className="font-medium">
-                                            {formatCurrency(plan.price_in_cents)}
+                                            {formatCurrency(
+                                                plan.price_in_cents,
+                                            )}
                                             /mês
                                         </span>
                                     </p>
@@ -134,7 +141,9 @@ function PlanCard({
                             <p className="text-sm text-muted-foreground">
                                 equivale a{' '}
                                 <span className="font-medium text-green-600 dark:text-green-400">
-                                    {formatCurrency(Math.round(plan.price_in_cents / 12))}
+                                    {formatCurrency(
+                                        Math.round(plan.price_in_cents / 12),
+                                    )}
                                     /mês
                                 </span>
                             </p>

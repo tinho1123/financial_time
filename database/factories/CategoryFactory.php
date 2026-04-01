@@ -11,7 +11,9 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 class CategoryFactory extends Factory
 {
     private static array $incomeNames = ['Salário', 'Freelance', 'Investimentos', 'Aluguel Recebido', 'Bônus'];
+
     private static array $expenseNames = ['Alimentação', 'Transporte', 'Moradia', 'Saúde', 'Lazer', 'Educação', 'Roupas', 'Serviços'];
+
     private static array $colors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6'];
 
     public function definition(): array

@@ -47,7 +47,8 @@ export function LocalizedPrice({ usdCents, interval }: LocalizedPriceProps) {
 export function LocalizedPriceDisclaimer() {
     return (
         <p className="text-center text-xs text-muted-foreground">
-            * Cobrado em USD. O valor final pode variar de acordo com a taxa de câmbio e impostos aplicáveis.
+            * Cobrado em USD. O valor final pode variar de acordo com a taxa de
+            câmbio e impostos aplicáveis.
         </p>
     );
 }

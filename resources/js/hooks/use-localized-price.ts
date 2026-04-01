@@ -66,7 +66,13 @@ const LOCALE_CURRENCY: Record<string, string> = {
  * Prices in these currencies are rounded up to the nearest whole unit.
  */
 const WHOLE_UNIT_CURRENCIES = new Set([
-    'BRL', 'MXN', 'ARS', 'CLP', 'COP', 'JPY', 'KRW',
+    'BRL',
+    'MXN',
+    'ARS',
+    'CLP',
+    'COP',
+    'JPY',
+    'KRW',
 ]);
 
 // ---------------------------------------------------------------------------
@@ -81,9 +87,11 @@ function detectCurrency(): string {
     const locale = navigator.language ?? 'en-US';
 
     // Try exact locale match first (e.g. "pt-BR"), then language code (e.g. "pt")
-    return LOCALE_CURRENCY[locale]
-        ?? LOCALE_CURRENCY[locale.split('-')[0]]
-        ?? 'USD';
+    return (
+        LOCALE_CURRENCY[locale] ??
+        LOCALE_CURRENCY[locale.split('-')[0]] ??
+        'USD'
+    );
 }
 
 /**
@@ -189,7 +197,7 @@ export function useLocalizedPrice(usdCents: number | null): {
             });
     }, [usdCents]);
 
-    const isLoading = (usdCents !== null && usdCents !== 0) && price === null;
+    const isLoading = usdCents !== null && usdCents !== 0 && price === null;
 
     return { price, isLoading };
 }
