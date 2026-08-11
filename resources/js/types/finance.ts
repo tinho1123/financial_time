@@ -1,4 +1,5 @@
 export type TransactionType = 'income' | 'expense';
+export type RecurringFrequency = 'weekly' | 'monthly' | 'yearly';
 export type AccountType =
     | 'checking'
     | 'savings'
@@ -53,6 +54,24 @@ export type Transaction = {
     description: string;
     date: string;
     notes: string | null;
+    account?: Account;
+    category?: Category | null;
+};
+
+export type RecurringTransaction = {
+    id: number;
+    user_id: number;
+    account_id: number;
+    category_id: number | null;
+    type: TransactionType;
+    amount_in_cents: number;
+    description: string;
+    notes: string | null;
+    frequency: RecurringFrequency;
+    start_date: string;
+    end_date: string | null;
+    next_due_date: string;
+    is_active: boolean;
     account?: Account;
     category?: Category | null;
 };

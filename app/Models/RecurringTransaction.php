@@ -2,28 +2,31 @@
 
 namespace App\Models;
 
+use App\Enums\RecurringFrequency;
 use App\Enums\TransactionType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Transaction extends Model
+class RecurringTransaction extends Model
 {
-    /** @use HasFactory<\Database\Factories\TransactionFactory> */
+    /** @use HasFactory<\Database\Factories\RecurringTransactionFactory> */
     use HasFactory;
 
     protected $fillable = [
         'user_id',
         'account_id',
         'category_id',
-        'recurring_transaction_id',
         'type',
         'amount_in_cents',
-        'previous_balance_in_cents',
-        'current_balance_in_cents',
         'description',
-        'date',
         'notes',
+        'frequency',
+        'start_date',
+        'end_date',
+        'next_due_date',
+        'is_active',
     ];
 
     protected function casts(): array
@@ -31,9 +34,11 @@ class Transaction extends Model
         return [
             'type' => TransactionType::class,
             'amount_in_cents' => 'integer',
-            'previous_balance_in_cents' => 'integer',
-            'current_balance_in_cents' => 'integer',
-            'date' => 'date',
+            'frequency' => RecurringFrequency::class,
+            'start_date' => 'date:Y-m-d',
+            'end_date' => 'date:Y-m-d',
+            'next_due_date' => 'date:Y-m-d',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -52,8 +57,8 @@ class Transaction extends Model
         return $this->belongsTo(Category::class);
     }
 
-    public function recurringTransaction(): BelongsTo
+    public function transactions(): HasMany
     {
-        return $this->belongsTo(RecurringTransaction::class);
+        return $this->hasMany(Transaction::class);
     }
 }
