@@ -39,7 +39,7 @@ class RecurringTransactionService
         $generated = 0;
 
         while ($recurringTransaction->is_active && $recurringTransaction->next_due_date->lte($today)) {
-            if ($recurringTransaction->end_date && $recurringTransaction->next_due_date->gt($recurringTransaction->end_date)) {
+            if ($this->hasReachedEndDate($recurringTransaction) || $this->hasReachedInstallmentLimit($recurringTransaction)) {
                 $recurringTransaction->update(['is_active' => false]);
                 break;
             }
@@ -47,16 +47,32 @@ class RecurringTransactionService
             $this->createTransactionFor($recurringTransaction);
             $generated++;
 
+            $installmentsGenerated = $recurringTransaction->installments_generated + 1;
             $nextDueDate = $recurringTransaction->frequency->nextOccurrence($recurringTransaction->next_due_date);
-            $isPastEndDate = $recurringTransaction->end_date && $nextDueDate->gt($recurringTransaction->end_date);
 
             $recurringTransaction->update([
                 'next_due_date' => $nextDueDate,
-                'is_active' => ! $isPastEndDate,
+                'installments_generated' => $installmentsGenerated,
             ]);
+
+            if ($this->hasReachedEndDate($recurringTransaction) || $this->hasReachedInstallmentLimit($recurringTransaction)) {
+                $recurringTransaction->update(['is_active' => false]);
+            }
         }
 
         return $generated;
+    }
+
+    private function hasReachedEndDate(RecurringTransaction $recurringTransaction): bool
+    {
+        return $recurringTransaction->end_date !== null
+            && $recurringTransaction->next_due_date->gt($recurringTransaction->end_date);
+    }
+
+    private function hasReachedInstallmentLimit(RecurringTransaction $recurringTransaction): bool
+    {
+        return $recurringTransaction->isInstallmentPurchase()
+            && $recurringTransaction->installments_generated >= $recurringTransaction->installments_total;
     }
 
     private function createTransactionFor(RecurringTransaction $recurringTransaction): Transaction
@@ -72,6 +88,10 @@ class RecurringTransactionService
             'account_id' => $recurringTransaction->account_id,
             'category_id' => $recurringTransaction->category_id,
             'recurring_transaction_id' => $recurringTransaction->id,
+            'installment_number' => $recurringTransaction->isInstallmentPurchase()
+                ? $recurringTransaction->installments_generated + 1
+                : null,
+            'installment_total' => $recurringTransaction->installments_total,
             'type' => $recurringTransaction->type,
             'amount_in_cents' => $recurringTransaction->amount_in_cents,
             'previous_balance_in_cents' => $balances['previous'],

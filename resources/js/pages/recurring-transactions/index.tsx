@@ -138,6 +138,11 @@ function RecurringTransactionRow({
     const { delete: destroy, processing } = useForm();
     const [toggling, setToggling] = useState(false);
 
+    const isInstallmentPurchase = rtx.installments_total !== null;
+    const isCompleted =
+        isInstallmentPurchase &&
+        rtx.installments_generated >= (rtx.installments_total ?? 0);
+
     function handleDelete() {
         if (!confirm('Excluir esta transação recorrente?')) {
             return;
@@ -181,13 +186,21 @@ function RecurringTransactionRow({
                         {rtx.description}
                     </p>
                     <Badge variant="secondary">
-                        {frequencyLabels[rtx.frequency]}
+                        {isInstallmentPurchase
+                            ? `${rtx.installments_generated}/${rtx.installments_total} parcelas`
+                            : frequencyLabels[rtx.frequency]}
                     </Badge>
-                    {!rtx.is_active && <Badge variant="outline">Pausada</Badge>}
+                    {!rtx.is_active &&
+                        (isCompleted ? (
+                            <Badge variant="outline">Concluída</Badge>
+                        ) : (
+                            <Badge variant="outline">Pausada</Badge>
+                        ))}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                    Próxima em{' '}
-                    {new Date(rtx.next_due_date).toLocaleDateString('pt-BR')}
+                    {isCompleted
+                        ? 'Todas as parcelas foram lançadas'
+                        : `Próxima em ${new Date(rtx.next_due_date).toLocaleDateString('pt-BR')}`}
                     {rtx.category && ` · ${rtx.category.name}`}
                     {rtx.account && ` · ${rtx.account.name}`}
                 </p>
@@ -199,20 +212,22 @@ function RecurringTransactionRow({
                 className="shrink-0"
             />
             <div className="flex shrink-0 gap-1">
-                <Button
-                    size="icon"
-                    variant="ghost"
-                    className="size-8"
-                    onClick={handleToggleActive}
-                    disabled={toggling}
-                    title={rtx.is_active ? 'Pausar' : 'Retomar'}
-                >
-                    {rtx.is_active ? (
-                        <Pause className="size-3.5" />
-                    ) : (
-                        <Play className="size-3.5" />
-                    )}
-                </Button>
+                {!isCompleted && (
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        className="size-8"
+                        onClick={handleToggleActive}
+                        disabled={toggling}
+                        title={rtx.is_active ? 'Pausar' : 'Retomar'}
+                    >
+                        {rtx.is_active ? (
+                            <Pause className="size-3.5" />
+                        ) : (
+                            <Play className="size-3.5" />
+                        )}
+                    </Button>
+                )}
                 <Button
                     size="icon"
                     variant="ghost"

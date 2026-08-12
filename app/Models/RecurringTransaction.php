@@ -27,6 +27,8 @@ class RecurringTransaction extends Model
         'end_date',
         'next_due_date',
         'is_active',
+        'installments_total',
+        'installments_generated',
     ];
 
     protected function casts(): array
@@ -39,7 +41,14 @@ class RecurringTransaction extends Model
             'end_date' => 'date:Y-m-d',
             'next_due_date' => 'date:Y-m-d',
             'is_active' => 'boolean',
+            'installments_total' => 'integer',
+            'installments_generated' => 'integer',
         ];
+    }
+
+    public function isInstallmentPurchase(): bool
+    {
+        return $this->installments_total !== null;
     }
 
     public function user(): BelongsTo

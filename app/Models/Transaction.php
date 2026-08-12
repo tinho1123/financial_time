@@ -17,6 +17,8 @@ class Transaction extends Model
         'account_id',
         'category_id',
         'recurring_transaction_id',
+        'installment_number',
+        'installment_total',
         'type',
         'amount_in_cents',
         'previous_balance_in_cents',
@@ -33,7 +35,9 @@ class Transaction extends Model
             'amount_in_cents' => 'integer',
             'previous_balance_in_cents' => 'integer',
             'current_balance_in_cents' => 'integer',
-            'date' => 'date',
+            'date' => 'date:Y-m-d',
+            'installment_number' => 'integer',
+            'installment_total' => 'integer',
         ];
     }
 

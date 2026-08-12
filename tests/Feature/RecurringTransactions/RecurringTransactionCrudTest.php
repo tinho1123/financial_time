@@ -46,6 +46,75 @@ test('user can create a recurring transaction', function () {
     expect($recurring->is_active)->toBeTrue();
 });
 
+test('user can create an installment purchase', function () {
+    $this->post(route('recurring-transactions.store'), [
+        'type' => 'expense',
+        'account_id' => $this->account->id,
+        'category_id' => $this->category->id,
+        'amount_in_cents' => '300.00',
+        'description' => 'TV parcelada',
+        'notes' => null,
+        'frequency' => 'monthly',
+        'start_date' => '2026-04-01',
+        'end_date' => null,
+        'installments_total' => 10,
+    ])->assertRedirect();
+
+    $recurring = RecurringTransaction::where('user_id', $this->user->id)->first();
+    expect($recurring)->not->toBeNull();
+    expect($recurring->installments_total)->toBe(10);
+    expect($recurring->installments_generated)->toBe(0);
+});
+
+test('installment purchase requires at least 2 installments', function () {
+    $this->post(route('recurring-transactions.store'), [
+        'type' => 'expense',
+        'account_id' => $this->account->id,
+        'category_id' => null,
+        'amount_in_cents' => '100.00',
+        'description' => 'Compra',
+        'notes' => null,
+        'frequency' => 'monthly',
+        'start_date' => '2026-04-01',
+        'end_date' => null,
+        'installments_total' => 1,
+    ])->assertSessionHasErrors('installments_total');
+});
+
+test('end date and installments total cannot be set together', function () {
+    $this->post(route('recurring-transactions.store'), [
+        'type' => 'expense',
+        'account_id' => $this->account->id,
+        'category_id' => null,
+        'amount_in_cents' => '100.00',
+        'description' => 'Compra',
+        'notes' => null,
+        'frequency' => 'monthly',
+        'start_date' => '2026-04-01',
+        'end_date' => '2026-12-01',
+        'installments_total' => 6,
+    ])->assertSessionHasErrors(['end_date', 'installments_total']);
+});
+
+test('updating an installment purchase cannot set an end date', function () {
+    $recurring = RecurringTransaction::factory()->installments(6)->create([
+        'user_id' => $this->user->id,
+        'account_id' => $this->account->id,
+        'category_id' => $this->category->id,
+    ]);
+
+    $this->put(route('recurring-transactions.update', $recurring), [
+        'type' => 'expense',
+        'category_id' => $this->category->id,
+        'amount_in_cents' => '100.00',
+        'description' => 'Compra',
+        'notes' => null,
+        'frequency' => 'monthly',
+        'end_date' => '2026-12-01',
+        'is_active' => true,
+    ])->assertSessionHasErrors('end_date');
+});
+
 test('end date before start date is rejected', function () {
     $this->post(route('recurring-transactions.store'), [
         'type' => 'expense',

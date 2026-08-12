@@ -32,7 +32,8 @@ class StoreRecurringTransactionRequest extends FormRequest
             'notes' => ['nullable', 'string', 'max:1000'],
             'frequency' => ['required', 'string', Rule::in(['weekly', 'monthly', 'yearly'])],
             'start_date' => ['required', 'date'],
-            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date', Rule::prohibitedIf($this->filled('installments_total'))],
+            'installments_total' => ['nullable', 'integer', 'min:2', 'max:60', Rule::prohibitedIf($this->filled('end_date'))],
         ];
     }
 
@@ -55,6 +56,11 @@ class StoreRecurringTransactionRequest extends FormRequest
             'start_date.date' => 'Data de início inválida.',
             'end_date.date' => 'Data de término inválida.',
             'end_date.after_or_equal' => 'A data de término deve ser igual ou posterior à data de início.',
+            'end_date.prohibited' => 'Informe a data de término ou o número de parcelas, não os dois.',
+            'installments_total.integer' => 'O número de parcelas deve ser um número válido.',
+            'installments_total.min' => 'O parcelamento deve ter pelo menos 2 parcelas.',
+            'installments_total.max' => 'O parcelamento pode ter no máximo 60 parcelas.',
+            'installments_total.prohibited' => 'Informe a data de término ou o número de parcelas, não os dois.',
         ];
     }
 }

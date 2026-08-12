@@ -1,4 +1,5 @@
 import { Link, useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,6 +35,12 @@ export function RecurringTransactionForm({
     onSuccess,
 }: RecurringTransactionFormProps) {
     const isEditing = Boolean(recurringTransaction);
+    const isInstallmentPurchase = Boolean(
+        recurringTransaction?.installments_total,
+    );
+    const [mode, setMode] = useState<'recurring' | 'installments'>(
+        isInstallmentPurchase ? 'installments' : 'recurring',
+    );
 
     const { data, setData, post, put, processing, errors } = useForm({
         type: recurringTransaction?.type ?? 'expense',
@@ -49,6 +56,9 @@ export function RecurringTransactionForm({
             recurringTransaction?.start_date ??
             new Date().toISOString().slice(0, 10),
         end_date: recurringTransaction?.end_date ?? '',
+        installments_total: recurringTransaction?.installments_total
+            ? String(recurringTransaction.installments_total)
+            : '',
         is_active: recurringTransaction?.is_active ?? true,
     });
 
@@ -68,6 +78,19 @@ export function RecurringTransactionForm({
 
     const activeCategories =
         data.type === 'income' ? incomeCategories : expenseCategories;
+
+    function selectMode(next: 'recurring' | 'installments') {
+        setMode(next);
+        if (next === 'installments') {
+            setData((prev) => ({
+                ...prev,
+                frequency: 'monthly',
+                end_date: '',
+            }));
+        } else {
+            setData('installments_total', '');
+        }
+    }
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -110,6 +133,41 @@ export function RecurringTransactionForm({
                 </div>
             </div>
 
+            {!isEditing && (
+                <div className="space-y-1.5">
+                    <Label>Repetição</Label>
+                    <div className="flex gap-2">
+                        <button
+                            type="button"
+                            onClick={() => selectMode('recurring')}
+                            className={`flex-1 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
+                                mode === 'recurring'
+                                    ? 'border-primary bg-primary/10 text-primary'
+                                    : 'border-input hover:bg-accent'
+                            }`}
+                        >
+                            Recorrência
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => selectMode('installments')}
+                            className={`flex-1 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
+                                mode === 'installments'
+                                    ? 'border-primary bg-primary/10 text-primary'
+                                    : 'border-input hover:bg-accent'
+                            }`}
+                        >
+                            Compra parcelada
+                        </button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                        {mode === 'recurring'
+                            ? 'Se repete indefinidamente (ou até uma data final), como salário ou assinaturas.'
+                            : 'Gera um número fixo de parcelas mensais, como uma compra parcelada no cartão.'}
+                    </p>
+                </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                     <Label htmlFor="rtx-account">Conta</Label>
@@ -137,7 +195,9 @@ export function RecurringTransactionForm({
                 </div>
 
                 <div className="space-y-1.5">
-                    <Label htmlFor="rtx-amount">Valor</Label>
+                    <Label htmlFor="rtx-amount">
+                        {mode === 'installments' ? 'Valor da parcela' : 'Valor'}
+                    </Label>
                     <Input
                         id="rtx-amount"
                         type="number"
@@ -208,32 +268,66 @@ export function RecurringTransactionForm({
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                    <Label htmlFor="rtx-frequency">Frequência</Label>
-                    <select
-                        id="rtx-frequency"
-                        value={data.frequency}
-                        onChange={(e) =>
-                            setData(
-                                'frequency',
-                                e.target.value as RecurringFrequency,
-                            )
-                        }
-                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                        aria-invalid={Boolean(errors.frequency)}
-                    >
-                        {frequencyOptions.map((f) => (
-                            <option key={f.value} value={f.value}>
-                                {f.label}
-                            </option>
-                        ))}
-                    </select>
-                    {errors.frequency && (
-                        <p className="text-xs text-destructive">
-                            {errors.frequency}
+                {mode === 'recurring' ? (
+                    <div className="space-y-1.5">
+                        <Label htmlFor="rtx-frequency">Frequência</Label>
+                        <select
+                            id="rtx-frequency"
+                            value={data.frequency}
+                            onChange={(e) =>
+                                setData(
+                                    'frequency',
+                                    e.target.value as RecurringFrequency,
+                                )
+                            }
+                            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                            aria-invalid={Boolean(errors.frequency)}
+                        >
+                            {frequencyOptions.map((f) => (
+                                <option key={f.value} value={f.value}>
+                                    {f.label}
+                                </option>
+                            ))}
+                        </select>
+                        {errors.frequency && (
+                            <p className="text-xs text-destructive">
+                                {errors.frequency}
+                            </p>
+                        )}
+                    </div>
+                ) : isEditing ? (
+                    <div className="space-y-1.5">
+                        <Label>Parcelas</Label>
+                        <p className="flex h-9 items-center text-sm text-muted-foreground">
+                            {recurringTransaction?.installments_generated} de{' '}
+                            {recurringTransaction?.installments_total} geradas
                         </p>
-                    )}
-                </div>
+                    </div>
+                ) : (
+                    <div className="space-y-1.5">
+                        <Label htmlFor="rtx-installments">
+                            Número de parcelas
+                        </Label>
+                        <Input
+                            id="rtx-installments"
+                            type="number"
+                            min="2"
+                            max="60"
+                            step="1"
+                            value={data.installments_total}
+                            onChange={(e) =>
+                                setData('installments_total', e.target.value)
+                            }
+                            placeholder="Ex: 12"
+                            aria-invalid={Boolean(errors.installments_total)}
+                        />
+                        {errors.installments_total && (
+                            <p className="text-xs text-destructive">
+                                {errors.installments_total}
+                            </p>
+                        )}
+                    </div>
+                )}
 
                 <div className="space-y-1.5">
                     <Label htmlFor="rtx-start">
@@ -255,21 +349,23 @@ export function RecurringTransactionForm({
                 </div>
             </div>
 
-            <div className="space-y-1.5">
-                <Label htmlFor="rtx-end">Terminar em (opcional)</Label>
-                <Input
-                    id="rtx-end"
-                    type="date"
-                    value={data.end_date}
-                    onChange={(e) => setData('end_date', e.target.value)}
-                    aria-invalid={Boolean(errors.end_date)}
-                />
-                {errors.end_date && (
-                    <p className="text-xs text-destructive">
-                        {errors.end_date}
-                    </p>
-                )}
-            </div>
+            {mode === 'recurring' && (
+                <div className="space-y-1.5">
+                    <Label htmlFor="rtx-end">Terminar em (opcional)</Label>
+                    <Input
+                        id="rtx-end"
+                        type="date"
+                        value={data.end_date}
+                        onChange={(e) => setData('end_date', e.target.value)}
+                        aria-invalid={Boolean(errors.end_date)}
+                    />
+                    {errors.end_date && (
+                        <p className="text-xs text-destructive">
+                            {errors.end_date}
+                        </p>
+                    )}
+                </div>
+            )}
 
             <div className="space-y-1.5">
                 <Label htmlFor="rtx-notes">Observações (opcional)</Label>
@@ -294,7 +390,11 @@ export function RecurringTransactionForm({
             )}
 
             <Button type="submit" disabled={processing} className="w-full">
-                {isEditing ? 'Salvar alterações' : 'Criar recorrência'}
+                {isEditing
+                    ? 'Salvar alterações'
+                    : mode === 'installments'
+                      ? 'Criar parcelamento'
+                      : 'Criar recorrência'}
             </Button>
         </form>
     );

@@ -23,7 +23,8 @@ class UpdateRecurringTransactionRequest extends FormRequest
 
     public function rules(): array
     {
-        $startDate = $this->route('recurring_transaction')?->start_date?->format('Y-m-d');
+        $recurringTransaction = $this->route('recurring_transaction');
+        $startDate = $recurringTransaction?->start_date?->format('Y-m-d');
 
         return [
             'category_id' => ['nullable', 'integer', Rule::exists('categories', 'id')->where('user_id', $this->user()->id)],
@@ -32,7 +33,12 @@ class UpdateRecurringTransactionRequest extends FormRequest
             'description' => ['required', 'string', 'max:255'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'frequency' => ['required', 'string', Rule::in(['weekly', 'monthly', 'yearly'])],
-            'end_date' => ['nullable', 'date', "after_or_equal:{$startDate}"],
+            'end_date' => [
+                'nullable',
+                'date',
+                "after_or_equal:{$startDate}",
+                Rule::prohibitedIf($recurringTransaction?->isInstallmentPurchase() ?? false),
+            ],
             'is_active' => ['required', 'boolean'],
         ];
     }
@@ -52,6 +58,7 @@ class UpdateRecurringTransactionRequest extends FormRequest
             'frequency.in' => 'Frequência inválida.',
             'end_date.date' => 'Data de término inválida.',
             'end_date.after_or_equal' => 'A data de término deve ser igual ou posterior à data de início.',
+            'end_date.prohibited' => 'Compras parceladas não podem ter data de término.',
             'is_active.required' => 'Informe se a recorrência está ativa.',
         ];
     }

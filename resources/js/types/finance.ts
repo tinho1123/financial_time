@@ -47,6 +47,9 @@ export type Transaction = {
     user_id: number;
     account_id: number;
     category_id: number | null;
+    recurring_transaction_id: number | null;
+    installment_number: number | null;
+    installment_total: number | null;
     type: TransactionType;
     amount_in_cents: number;
     previous_balance_in_cents: number;
@@ -72,6 +75,8 @@ export type RecurringTransaction = {
     end_date: string | null;
     next_due_date: string;
     is_active: boolean;
+    installments_total: number | null;
+    installments_generated: number;
     account?: Account;
     category?: Category | null;
 };

@@ -153,3 +153,44 @@ test('artisan command generates due transactions', function () {
 
     expect(Transaction::count())->toBe(1);
 });
+
+test('generates every installment and stops at the total, deactivating the plan', function () {
+    $recurring = RecurringTransaction::factory()->installments(3)->create([
+        'user_id' => $this->user->id,
+        'account_id' => $this->account->id,
+        'type' => 'expense',
+        'amount_in_cents' => 10000,
+        'next_due_date' => '2026-04-01',
+        'end_date' => null,
+    ]);
+
+    // due: 04-01, 05-01, 06-01, and a hypothetical 07-01 that must NOT be generated.
+    $generated = $this->service->generateDueTransactions(Carbon::parse('2026-08-01'));
+
+    expect($generated)->toBe(3);
+    expect($recurring->fresh()->is_active)->toBeFalse();
+    expect($recurring->fresh()->installments_generated)->toBe(3);
+
+    $transactions = Transaction::where('recurring_transaction_id', $recurring->id)
+        ->orderBy('date')
+        ->get();
+
+    expect($transactions)->toHaveCount(3);
+    expect($transactions->pluck('installment_number')->all())->toBe([1, 2, 3]);
+    expect($transactions->pluck('installment_total')->all())->toBe([3, 3, 3]);
+});
+
+test('installment transactions are not generated for plain recurring transactions', function () {
+    RecurringTransaction::factory()->monthly()->create([
+        'user_id' => $this->user->id,
+        'account_id' => $this->account->id,
+        'next_due_date' => '2026-04-01',
+        'end_date' => null,
+    ]);
+
+    $this->service->generateDueTransactions(Carbon::parse('2026-04-01'));
+
+    $transaction = Transaction::first();
+    expect($transaction->installment_number)->toBeNull();
+    expect($transaction->installment_total)->toBeNull();
+});

@@ -4,6 +4,7 @@ import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { AmountDisplay } from '@/components/amount-display';
 import { TransactionForm } from '@/components/transaction-form';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -240,7 +241,16 @@ function TransactionRow({
                 )}
             </div>
             <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{tx.description}</p>
+                <div className="flex items-center gap-2">
+                    <p className="truncate text-sm font-medium">
+                        {tx.description}
+                    </p>
+                    {tx.installment_number && (
+                        <Badge variant="secondary" className="shrink-0">
+                            {tx.installment_number}/{tx.installment_total}
+                        </Badge>
+                    )}
+                </div>
                 <p className="text-xs text-muted-foreground">
                     {new Date(tx.date).toLocaleDateString('pt-BR')}
                     {tx.category && ` · ${tx.category.name}`}

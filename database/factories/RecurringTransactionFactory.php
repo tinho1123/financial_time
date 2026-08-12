@@ -36,7 +36,18 @@ class RecurringTransactionFactory extends Factory
             'end_date' => null,
             'next_due_date' => $startDate,
             'is_active' => true,
+            'installments_total' => null,
+            'installments_generated' => 0,
         ];
+    }
+
+    public function installments(int $total): static
+    {
+        return $this->state([
+            'frequency' => 'monthly',
+            'installments_total' => $total,
+            'installments_generated' => 0,
+        ]);
     }
 
     public function weekly(): static
