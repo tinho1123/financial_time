@@ -1,6 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import { Head, router } from '@inertiajs/react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Download, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { AmountDisplay } from '@/components/amount-display';
 import { TransactionForm } from '@/components/transaction-form';
@@ -129,10 +129,18 @@ export default function TransactionsIndex({
                         placeholder="Até"
                     />
 
-                    <Button
-                        className="ml-auto"
-                        onClick={() => setCreateOpen(true)}
-                    >
+                    <Button variant="outline" className="ml-auto" asChild>
+                        <a
+                            href={transactionsRoute.export.url({
+                                query: filters,
+                            })}
+                        >
+                            <Download className="size-4" />
+                            Exportar CSV
+                        </a>
+                    </Button>
+
+                    <Button onClick={() => setCreateOpen(true)}>
                         <Plus className="size-4" />
                         Nova transação
                     </Button>

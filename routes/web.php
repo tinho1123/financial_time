@@ -24,6 +24,7 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 
+    Route::get('transactions/export', [TransactionController::class, 'export'])->name('transactions.export');
     Route::resource('transactions', TransactionController::class)->except(['show', 'create', 'edit']);
     Route::resource('recurring-transactions', RecurringTransactionController::class)->except(['show', 'create', 'edit']);
     Route::resource('categories', CategoryController::class)->except(['show', 'create', 'edit']);
