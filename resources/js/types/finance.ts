@@ -1,4 +1,5 @@
 export type TransactionType = 'income' | 'expense';
+export type RecurringFrequency = 'weekly' | 'monthly' | 'yearly';
 export type AccountType =
     | 'checking'
     | 'savings'
@@ -46,6 +47,9 @@ export type Transaction = {
     user_id: number;
     account_id: number;
     category_id: number | null;
+    recurring_transaction_id: number | null;
+    installment_number: number | null;
+    installment_total: number | null;
     type: TransactionType;
     amount_in_cents: number;
     previous_balance_in_cents: number;
@@ -55,6 +59,45 @@ export type Transaction = {
     notes: string | null;
     account?: Account;
     category?: Category | null;
+};
+
+export type RecurringTransaction = {
+    id: number;
+    user_id: number;
+    account_id: number;
+    category_id: number | null;
+    type: TransactionType;
+    amount_in_cents: number;
+    description: string;
+    notes: string | null;
+    frequency: RecurringFrequency;
+    start_date: string;
+    end_date: string | null;
+    next_due_date: string;
+    is_active: boolean;
+    installments_total: number | null;
+    installments_generated: number;
+    account?: Account;
+    category?: Category | null;
+};
+
+export type Budget = {
+    id: number;
+    amount_in_cents: number;
+    spent_in_cents: number;
+    percentage: number;
+    category: Category;
+};
+
+export type AppNotification = {
+    id: string;
+    data: {
+        title: string;
+        message: string;
+        url: string;
+    };
+    read_at: string | null;
+    created_at: string;
 };
 
 export type MonthlySummary = {

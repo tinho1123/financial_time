@@ -2,30 +2,33 @@
 
 namespace App\Models;
 
+use App\Enums\RecurringFrequency;
 use App\Enums\TransactionType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Transaction extends Model
+class RecurringTransaction extends Model
 {
-    /** @use HasFactory<\Database\Factories\TransactionFactory> */
+    /** @use HasFactory<\Database\Factories\RecurringTransactionFactory> */
     use HasFactory;
 
     protected $fillable = [
         'user_id',
         'account_id',
         'category_id',
-        'recurring_transaction_id',
-        'installment_number',
-        'installment_total',
         'type',
         'amount_in_cents',
-        'previous_balance_in_cents',
-        'current_balance_in_cents',
         'description',
-        'date',
         'notes',
+        'frequency',
+        'start_date',
+        'end_date',
+        'next_due_date',
+        'is_active',
+        'installments_total',
+        'installments_generated',
     ];
 
     protected function casts(): array
@@ -33,12 +36,19 @@ class Transaction extends Model
         return [
             'type' => TransactionType::class,
             'amount_in_cents' => 'integer',
-            'previous_balance_in_cents' => 'integer',
-            'current_balance_in_cents' => 'integer',
-            'date' => 'date:Y-m-d',
-            'installment_number' => 'integer',
-            'installment_total' => 'integer',
+            'frequency' => RecurringFrequency::class,
+            'start_date' => 'date:Y-m-d',
+            'end_date' => 'date:Y-m-d',
+            'next_due_date' => 'date:Y-m-d',
+            'is_active' => 'boolean',
+            'installments_total' => 'integer',
+            'installments_generated' => 'integer',
         ];
+    }
+
+    public function isInstallmentPurchase(): bool
+    {
+        return $this->installments_total !== null;
     }
 
     public function user(): BelongsTo
@@ -56,8 +66,8 @@ class Transaction extends Model
         return $this->belongsTo(Category::class);
     }
 
-    public function recurringTransaction(): BelongsTo
+    public function transactions(): HasMany
     {
-        return $this->belongsTo(RecurringTransaction::class);
+        return $this->hasMany(Transaction::class);
     }
 }

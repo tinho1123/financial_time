@@ -71,6 +71,30 @@ test('user can create an expense transaction and balance decreases', function ()
     expect($expense->current_balance_in_cents)->toBe(97000);
 });
 
+test('creating a backdated transaction recalculates the balance of later existing transactions', function () {
+    $laterTransaction = Transaction::factory()->income()->create([
+        'user_id' => $this->user->id,
+        'account_id' => $this->account->id,
+        'amount_in_cents' => 5000,
+        'previous_balance_in_cents' => 0,
+        'current_balance_in_cents' => 5000,
+        'date' => '2026-03-20',
+    ]);
+
+    $this->post(route('transactions.store'), [
+        'type' => 'income',
+        'account_id' => $this->account->id,
+        'category_id' => null,
+        'amount_in_cents' => '10.00',
+        'description' => 'Lançado com data retroativa',
+        'date' => '2026-03-01',
+        'notes' => null,
+    ])->assertRedirect();
+
+    expect($laterTransaction->fresh()->previous_balance_in_cents)->toBe(6000);
+    expect($laterTransaction->fresh()->current_balance_in_cents)->toBe(11000);
+});
+
 test('user cannot access another user transactions', function () {
     $other = User::factory()->create();
     $otherAccount = Account::factory()->create(['user_id' => $other->id]);

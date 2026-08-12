@@ -1,9 +1,10 @@
 import { useForm } from '@inertiajs/react';
 import { Head, router } from '@inertiajs/react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Download, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { AmountDisplay } from '@/components/amount-display';
 import { TransactionForm } from '@/components/transaction-form';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -128,10 +129,18 @@ export default function TransactionsIndex({
                         placeholder="Até"
                     />
 
-                    <Button
-                        className="ml-auto"
-                        onClick={() => setCreateOpen(true)}
-                    >
+                    <Button variant="outline" className="ml-auto" asChild>
+                        <a
+                            href={transactionsRoute.export.url({
+                                query: filters,
+                            })}
+                        >
+                            <Download className="size-4" />
+                            Exportar CSV
+                        </a>
+                    </Button>
+
+                    <Button onClick={() => setCreateOpen(true)}>
                         <Plus className="size-4" />
                         Nova transação
                     </Button>
@@ -240,7 +249,16 @@ function TransactionRow({
                 )}
             </div>
             <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{tx.description}</p>
+                <div className="flex items-center gap-2">
+                    <p className="truncate text-sm font-medium">
+                        {tx.description}
+                    </p>
+                    {tx.installment_number && (
+                        <Badge variant="secondary" className="shrink-0">
+                            {tx.installment_number}/{tx.installment_total}
+                        </Badge>
+                    )}
+                </div>
                 <p className="text-xs text-muted-foreground">
                     {new Date(tx.date).toLocaleDateString('pt-BR')}
                     {tx.category && ` · ${tx.category.name}`}

@@ -89,6 +89,11 @@ class User extends Authenticatable
         return $this->hasMany(Account::class);
     }
 
+    public function budgets(): HasMany
+    {
+        return $this->hasMany(Budget::class);
+    }
+
     public function hasActiveCreemSubscription(): bool
     {
         return ! is_null($this->creem_subscription_id);
