@@ -4,12 +4,16 @@ namespace App\Services;
 
 use App\Models\RecurringTransaction;
 use App\Models\Transaction;
+use App\Notifications\InstallmentPlanCompletedNotification;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 
 class RecurringTransactionService
 {
-    public function __construct(private readonly BalanceService $balanceService) {}
+    public function __construct(
+        private readonly BalanceService $balanceService,
+        private readonly BudgetService $budgetService,
+    ) {}
 
     /**
      * Generate every transaction due (including missed occurrences) for all active
@@ -44,8 +48,9 @@ class RecurringTransactionService
                 break;
             }
 
-            $this->createTransactionFor($recurringTransaction);
+            $transaction = $this->createTransactionFor($recurringTransaction);
             $generated++;
+            $this->budgetService->notifyIfJustExceeded($transaction);
 
             $installmentsGenerated = $recurringTransaction->installments_generated + 1;
             $nextDueDate = $recurringTransaction->frequency->nextOccurrence($recurringTransaction->next_due_date);
@@ -55,7 +60,10 @@ class RecurringTransactionService
                 'installments_generated' => $installmentsGenerated,
             ]);
 
-            if ($this->hasReachedEndDate($recurringTransaction) || $this->hasReachedInstallmentLimit($recurringTransaction)) {
+            if ($this->hasReachedInstallmentLimit($recurringTransaction)) {
+                $recurringTransaction->update(['is_active' => false]);
+                $recurringTransaction->user->notify(new InstallmentPlanCompletedNotification($recurringTransaction));
+            } elseif ($this->hasReachedEndDate($recurringTransaction)) {
                 $recurringTransaction->update(['is_active' => false]);
             }
         }

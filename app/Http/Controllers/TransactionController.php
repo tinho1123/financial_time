@@ -9,6 +9,7 @@ use App\Models\Account;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Services\BalanceService;
+use App\Services\BudgetService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,7 +19,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class TransactionController extends Controller
 {
-    public function __construct(private readonly BalanceService $balanceService) {}
+    public function __construct(
+        private readonly BalanceService $balanceService,
+        private readonly BudgetService $budgetService,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -101,12 +105,14 @@ class TransactionController extends Controller
             $request->amount_in_cents
         );
 
-        Transaction::query()->create([
+        $transaction = Transaction::query()->create([
             ...$request->validated(),
             'user_id' => $user->id,
             'previous_balance_in_cents' => $balances['previous'],
             'current_balance_in_cents' => $balances['current'],
         ]);
+
+        $this->budgetService->notifyIfJustExceeded($transaction);
 
         return redirect()->route('transactions.index')->with('success', 'Transação criada com sucesso.');
     }

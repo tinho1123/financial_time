@@ -89,6 +89,17 @@ export type Budget = {
     category: Category;
 };
 
+export type AppNotification = {
+    id: string;
+    data: {
+        title: string;
+        message: string;
+        url: string;
+    };
+    read_at: string | null;
+    created_at: string;
+};
+
 export type MonthlySummary = {
     month: string;
     income_in_cents: number;
