@@ -1,5 +1,12 @@
 import { Link } from '@inertiajs/react';
-import { ArrowLeftRight, LayoutGrid, Repeat, Tag, Wallet } from 'lucide-react';
+import {
+    ArrowLeftRight,
+    LayoutGrid,
+    PiggyBank,
+    Repeat,
+    Tag,
+    Wallet,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -14,6 +21,7 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import accounts from '@/routes/accounts';
+import budgets from '@/routes/budgets';
 import categories from '@/routes/categories';
 import recurringTransactions from '@/routes/recurring-transactions';
 import transactions from '@/routes/transactions';
@@ -34,6 +42,11 @@ const mainNavItems: NavItem[] = [
         title: 'Recorrentes',
         href: recurringTransactions.index.url(),
         icon: Repeat,
+    },
+    {
+        title: 'Orçamentos',
+        href: budgets.index.url(),
+        icon: PiggyBank,
     },
     {
         title: 'Categorias',

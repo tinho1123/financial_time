@@ -81,6 +81,14 @@ export type RecurringTransaction = {
     category?: Category | null;
 };
 
+export type Budget = {
+    id: number;
+    amount_in_cents: number;
+    spent_in_cents: number;
+    percentage: number;
+    category: Category;
+};
+
 export type MonthlySummary = {
     month: string;
     income_in_cents: number;
