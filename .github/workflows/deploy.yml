@@ -33,14 +33,17 @@ jobs:
       - name: Build assets
         run: npm run build
 
-      - name: Upload built assets to Hostinger
+      - name: Upload application code to Hostinger
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
-          source: "public/build/"
+          # Whitelist only what the app needs to run. Notably excluded:
+          # .env (server-managed secrets), storage/ (runtime logs, sessions,
+          # cache — server-local state), .git, node_modules, tests.
+          source: "app/,bootstrap/app.php,bootstrap/providers.php,config/,database/,public/,resources/views/,resources/css/,routes/,vendor/,artisan,composer.json,composer.lock"
           target: "/home/u968588512/domains/financialtime.me/financial_time/"
 
       - name: Run post-deploy commands
@@ -53,6 +56,7 @@ jobs:
           script: |
             cd ~/domains/financialtime.me/financial_time
             php artisan migrate --force
+            php artisan optimize:clear
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
