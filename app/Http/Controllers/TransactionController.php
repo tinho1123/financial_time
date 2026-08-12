@@ -112,6 +112,7 @@ class TransactionController extends Controller
             'current_balance_in_cents' => $balances['current'],
         ]);
 
+        $this->balanceService->recalculateFromTransaction($transaction);
         $this->budgetService->notifyIfJustExceeded($transaction);
 
         return redirect()->route('transactions.index')->with('success', 'Transação criada com sucesso.');

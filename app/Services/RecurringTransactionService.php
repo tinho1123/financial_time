@@ -53,10 +53,13 @@ class RecurringTransactionService
             $this->budgetService->notifyIfJustExceeded($transaction);
 
             $installmentsGenerated = $recurringTransaction->installments_generated + 1;
-            $nextDueDate = $recurringTransaction->frequency->nextOccurrence($recurringTransaction->next_due_date);
+            $nextDueDate = $recurringTransaction->frequency->occurrenceAfterAnchor(
+                $recurringTransaction->start_date,
+                $installmentsGenerated,
+            );
 
             $recurringTransaction->update([
-                'next_due_date' => $nextDueDate,
+                'next_due_date' => $nextDueDate->format('Y-m-d'),
                 'installments_generated' => $installmentsGenerated,
             ]);
 
@@ -91,7 +94,7 @@ class RecurringTransactionService
             $recurringTransaction->amount_in_cents,
         );
 
-        return Transaction::query()->create([
+        $transaction = Transaction::query()->create([
             'user_id' => $recurringTransaction->user_id,
             'account_id' => $recurringTransaction->account_id,
             'category_id' => $recurringTransaction->category_id,
@@ -108,5 +111,12 @@ class RecurringTransactionService
             'date' => $recurringTransaction->next_due_date->format('Y-m-d'),
             'notes' => $recurringTransaction->notes,
         ]);
+
+        // A catch-up run can insert several backdated transactions in one pass; if any
+        // land before an already-existing later transaction on the same account, that
+        // transaction's balance snapshot needs to be recalculated to stay accurate.
+        $this->balanceService->recalculateFromTransaction($transaction);
+
+        return $transaction;
     }
 }

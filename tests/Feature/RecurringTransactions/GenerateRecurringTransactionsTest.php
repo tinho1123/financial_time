@@ -23,6 +23,7 @@ test('generates a transaction when next due date has arrived', function () {
         'category_id' => null,
         'type' => 'income',
         'amount_in_cents' => 500000,
+        'start_date' => '2026-04-01',
         'next_due_date' => '2026-04-01',
         'end_date' => null,
     ]);
@@ -45,6 +46,7 @@ test('does not generate a transaction before the due date', function () {
     RecurringTransaction::factory()->monthly()->create([
         'user_id' => $this->user->id,
         'account_id' => $this->account->id,
+        'start_date' => '2026-05-01',
         'next_due_date' => '2026-05-01',
         'end_date' => null,
     ]);
@@ -61,6 +63,7 @@ test('catches up on multiple missed weekly occurrences', function () {
         'account_id' => $this->account->id,
         'type' => 'expense',
         'amount_in_cents' => 1000,
+        'start_date' => '2026-04-01',
         'next_due_date' => '2026-04-01',
         'end_date' => null,
     ]);
@@ -86,6 +89,7 @@ test('keeps balances consistent across successive generated transactions', funct
         'account_id' => $this->account->id,
         'type' => 'income',
         'amount_in_cents' => 10000,
+        'start_date' => '2026-04-01',
         'next_due_date' => '2026-04-01',
         'end_date' => null,
     ]);
@@ -101,6 +105,7 @@ test('does not generate for inactive recurring transactions', function () {
     RecurringTransaction::factory()->monthly()->inactive()->create([
         'user_id' => $this->user->id,
         'account_id' => $this->account->id,
+        'start_date' => '2026-04-01',
         'next_due_date' => '2026-04-01',
     ]);
 
@@ -114,6 +119,7 @@ test('deactivates the recurring transaction once it passes the end date', functi
     $recurring = RecurringTransaction::factory()->monthly()->create([
         'user_id' => $this->user->id,
         'account_id' => $this->account->id,
+        'start_date' => '2026-04-01',
         'next_due_date' => '2026-04-01',
         'end_date' => '2026-04-01',
     ]);
@@ -125,24 +131,86 @@ test('deactivates the recurring transaction once it passes the end date', functi
     expect(Transaction::where('recurring_transaction_id', $recurring->id)->count())->toBe(1);
 });
 
-test('monthly frequency does not overflow into the wrong month on 31-day starts', function () {
+test('monthly frequency does not drift away from its anchor day after passing through a short month', function () {
     $recurring = RecurringTransaction::factory()->monthly()->create([
         'user_id' => $this->user->id,
         'account_id' => $this->account->id,
+        'start_date' => '2026-01-31',
         'next_due_date' => '2026-01-31',
         'end_date' => null,
     ]);
 
+    // Feb 2026 has 28 days, so the first occurrence should land on Feb 28, not March 3.
     $this->service->generateDueTransactions(Carbon::parse('2026-01-31'));
-
-    // Feb 2026 has 28 days, so the next occurrence should land on Feb 28, not March 3.
     expect($recurring->fresh()->next_due_date->format('Y-m-d'))->toBe('2026-02-28');
+
+    // Crucially, March has 31 days again: the schedule must jump back to the 31st
+    // (computed from the original anchor) instead of staying stuck on the 28th
+    // forever because it was chained from the truncated February occurrence.
+    $this->service->generateDueTransactions(Carbon::parse('2026-02-28'));
+    expect($recurring->fresh()->next_due_date->format('Y-m-d'))->toBe('2026-03-31');
+
+    // April has 30 days.
+    $this->service->generateDueTransactions(Carbon::parse('2026-03-31'));
+    expect($recurring->fresh()->next_due_date->format('Y-m-d'))->toBe('2026-04-30');
+});
+
+test('yearly frequency does not drift away from a leap day anchor', function () {
+    $recurring = RecurringTransaction::factory()->yearly()->create([
+        'user_id' => $this->user->id,
+        'account_id' => $this->account->id,
+        'start_date' => '2028-02-29',
+        'next_due_date' => '2028-02-29',
+        'end_date' => null,
+    ]);
+
+    $expectedNextDueDates = [
+        '2028-02-29' => '2029-02-28',
+        '2029-02-28' => '2030-02-28',
+        '2030-02-28' => '2031-02-28',
+        // 2032 is a leap year again: the schedule must land back on Feb 29 (computed
+        // from the original anchor), not drift to Mar 1 because it was chained from
+        // the truncated intermediate occurrences.
+        '2031-02-28' => '2032-02-29',
+    ];
+
+    foreach ($expectedNextDueDates as $asOf => $expectedNext) {
+        $this->service->generateDueTransactions(Carbon::parse($asOf));
+        expect($recurring->fresh()->next_due_date->format('Y-m-d'))->toBe($expectedNext);
+    }
+});
+
+test('generating a backdated occurrence recalculates the balance of later existing transactions', function () {
+    $laterTransaction = Transaction::factory()->income()->create([
+        'user_id' => $this->user->id,
+        'account_id' => $this->account->id,
+        'amount_in_cents' => 5000,
+        'previous_balance_in_cents' => 0,
+        'current_balance_in_cents' => 5000,
+        'date' => '2026-04-20',
+    ]);
+
+    RecurringTransaction::factory()->weekly()->create([
+        'user_id' => $this->user->id,
+        'account_id' => $this->account->id,
+        'type' => 'income',
+        'amount_in_cents' => 1000,
+        'start_date' => '2026-04-01',
+        'next_due_date' => '2026-04-01',
+        'end_date' => '2026-04-01',
+    ]);
+
+    $this->service->generateDueTransactions(Carbon::parse('2026-04-01'));
+
+    expect($laterTransaction->fresh()->previous_balance_in_cents)->toBe(6000);
+    expect($laterTransaction->fresh()->current_balance_in_cents)->toBe(11000);
 });
 
 test('artisan command generates due transactions', function () {
     RecurringTransaction::factory()->weekly()->create([
         'user_id' => $this->user->id,
         'account_id' => $this->account->id,
+        'start_date' => Carbon::today()->format('Y-m-d'),
         'next_due_date' => Carbon::today()->format('Y-m-d'),
         'end_date' => null,
     ]);
@@ -160,6 +228,7 @@ test('generates every installment and stops at the total, deactivating the plan'
         'account_id' => $this->account->id,
         'type' => 'expense',
         'amount_in_cents' => 10000,
+        'start_date' => '2026-04-01',
         'next_due_date' => '2026-04-01',
         'end_date' => null,
     ]);
@@ -178,12 +247,15 @@ test('generates every installment and stops at the total, deactivating the plan'
     expect($transactions)->toHaveCount(3);
     expect($transactions->pluck('installment_number')->all())->toBe([1, 2, 3]);
     expect($transactions->pluck('installment_total')->all())->toBe([3, 3, 3]);
+    expect($transactions->pluck('date')->map(fn ($date) => $date->format('Y-m-d'))->all())
+        ->toBe(['2026-04-01', '2026-05-01', '2026-06-01']);
 });
 
 test('installment transactions are not generated for plain recurring transactions', function () {
     RecurringTransaction::factory()->monthly()->create([
         'user_id' => $this->user->id,
         'account_id' => $this->account->id,
+        'start_date' => '2026-04-01',
         'next_due_date' => '2026-04-01',
         'end_date' => null,
     ]);

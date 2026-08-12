@@ -16,6 +16,7 @@ test('completing the last installment notifies the user', function () {
     RecurringTransaction::factory()->installments(2)->create([
         'user_id' => $user->id,
         'account_id' => $account->id,
+        'start_date' => '2026-04-01',
         'next_due_date' => '2026-04-01',
         'end_date' => null,
     ]);
@@ -33,6 +34,7 @@ test('generating a non-final installment does not notify completion', function (
     RecurringTransaction::factory()->installments(3)->create([
         'user_id' => $user->id,
         'account_id' => $account->id,
+        'start_date' => '2026-04-01',
         'next_due_date' => '2026-04-01',
         'end_date' => null,
     ]);
@@ -50,6 +52,7 @@ test('a plain recurring transaction ending via end_date does not notify installm
     RecurringTransaction::factory()->monthly()->create([
         'user_id' => $user->id,
         'account_id' => $account->id,
+        'start_date' => '2026-04-01',
         'next_due_date' => '2026-04-01',
         'end_date' => '2026-04-01',
     ]);
