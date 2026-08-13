@@ -54,6 +54,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
+            set -e
             cd ~/domains/financialtime.me/financial_time
             rm -f bootstrap/cache/*.php
             php artisan migrate --force
