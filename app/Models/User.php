@@ -29,6 +29,9 @@ class User extends Authenticatable
         'plan_expires_at',
         'creem_customer_id',
         'creem_subscription_id',
+        'partner_name',
+        'own_income_in_cents',
+        'partner_income_in_cents',
     ];
 
     /**
@@ -55,6 +58,8 @@ class User extends Authenticatable
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
             'plan_expires_at' => 'datetime',
+            'own_income_in_cents' => 'integer',
+            'partner_income_in_cents' => 'integer',
         ];
     }
 
@@ -92,6 +97,19 @@ class User extends Authenticatable
     public function budgets(): HasMany
     {
         return $this->hasMany(Budget::class);
+    }
+
+    public function goals(): HasMany
+    {
+        return $this->hasMany(Goal::class);
+    }
+
+    public function hasCoupleSplit(): bool
+    {
+        return filled($this->partner_name)
+            && $this->own_income_in_cents !== null
+            && $this->partner_income_in_cents !== null
+            && ($this->own_income_in_cents + $this->partner_income_in_cents) > 0;
     }
 
     public function hasActiveCreemSubscription(): bool

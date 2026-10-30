@@ -2,20 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\DashboardRequest;
 use App\Models\Transaction;
-use Illuminate\Http\Request;
+use App\Models\User;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function __invoke(Request $request): Response
+    public function __invoke(DashboardRequest $request): Response
     {
         $user = $request->user();
-        $now = Carbon::now();
-        $startOfMonth = $now->copy()->startOfMonth();
-        $endOfMonth = $now->copy()->endOfMonth();
+        $startOfMonth = $request->selectedMonth();
+        $endOfMonth = $startOfMonth->copy()->endOfMonth();
 
         $monthlyIncome = Transaction::query()
             ->where('user_id', $user->id)
@@ -33,6 +33,7 @@ class DashboardController extends Controller
 
         $recentTransactions = Transaction::query()
             ->where('user_id', $user->id)
+            ->whereBetween('date', [$startOfMonth, $endOfMonth])
             ->with(['account', 'category'])
             ->latest('date')
             ->latest('id')
@@ -45,41 +46,49 @@ class DashboardController extends Controller
         $categoryBreakdown = [];
 
         if ($isPaidPlan) {
-            $monthlySummary = $this->getMonthlySummary($user->id);
+            $monthlySummary = $this->getMonthlySummary($user->id, $startOfMonth);
             $categoryBreakdown = $this->getCategoryBreakdown($user->id, $startOfMonth, $endOfMonth);
         }
 
         return Inertia::render('dashboard', [
+            'selectedMonth' => $startOfMonth->format('Y-m'),
+            'currentMonth' => Carbon::now()->format('Y-m'),
             'totalIncomeInCents' => (int) $monthlyIncome,
             'totalExpenseInCents' => (int) $monthlyExpense,
             'netBalanceInCents' => (int) $netBalance,
             'recentTransactions' => $recentTransactions,
             'monthlySummary' => $monthlySummary,
             'categoryBreakdown' => $categoryBreakdown,
+            'coupleSplit' => $this->getCoupleSplit($user, (int) $monthlyExpense),
+            'goals' => $user->goals()->orderBy('created_at')->limit(3)->get(),
             'isPaidPlan' => $isPaidPlan,
         ]);
     }
 
-    /** @return array<int, array{month: string, income_in_cents: int, expense_in_cents: int}> */
-    private function getMonthlySummary(int $userId): array
+    /**
+     * Totals for the six months ending at the selected month. Grouping happens in PHP so the
+     * query runs the same on SQLite (dev/tests) and MySQL (production).
+     *
+     * @return array<int, array{month: string, income_in_cents: int, expense_in_cents: int}>
+     */
+    private function getMonthlySummary(int $userId, Carbon $selectedMonth): array
     {
-        $months = collect(range(5, 0))->map(fn ($i) => Carbon::now()->subMonths($i)->format('Y-m'));
+        $firstMonth = $selectedMonth->copy()->subMonths(5)->startOfMonth();
+        $months = collect(range(5, 0))->map(fn ($i) => $selectedMonth->copy()->subMonths($i)->format('Y-m'));
 
-        $results = Transaction::query()
+        $totals = Transaction::query()
             ->where('user_id', $userId)
-            ->where('date', '>=', Carbon::now()->subMonths(5)->startOfMonth())
-            ->selectRaw("DATE_FORMAT(date, '%Y-%m') as month, type, SUM(amount_in_cents) as total")
-            ->groupByRaw("DATE_FORMAT(date, '%Y-%m'), type")
-            ->get()
-            ->groupBy('month');
+            ->whereBetween('date', [$firstMonth, $selectedMonth->copy()->endOfMonth()])
+            ->get(['date', 'type', 'amount_in_cents'])
+            ->groupBy(fn (Transaction $transaction) => $transaction->date->format('Y-m'));
 
-        return $months->map(function ($month) use ($results) {
-            $data = $results->get($month, collect());
+        return $months->map(function (string $month) use ($totals) {
+            $transactions = $totals->get($month, collect());
 
             return [
                 'month' => $month,
-                'income_in_cents' => (int) ($data->firstWhere('type', 'income')?->total ?? 0),
-                'expense_in_cents' => (int) ($data->firstWhere('type', 'expense')?->total ?? 0),
+                'income_in_cents' => (int) $transactions->where('type.value', 'income')->sum('amount_in_cents'),
+                'expense_in_cents' => (int) $transactions->where('type.value', 'expense')->sum('amount_in_cents'),
             ];
         })->values()->toArray();
     }
@@ -105,5 +114,31 @@ class DashboardController extends Controller
             'total_in_cents' => (int) $row->total,
             'percentage' => $grandTotal > 0 ? round(($row->total / $grandTotal) * 100, 1) : 0,
         ])->toArray();
+    }
+
+    /**
+     * Splits the month's expenses between the user and their partner, proportionally to income.
+     *
+     * @return array{partner_name: string, own_income_in_cents: int, partner_income_in_cents: int, own_share_percentage: float, own_share_in_cents: int, partner_share_in_cents: int}|null
+     */
+    private function getCoupleSplit(User $user, int $expenseInCents): ?array
+    {
+        if (! $user->hasCoupleSplit()) {
+            return null;
+        }
+
+        $ownIncome = (int) $user->own_income_in_cents;
+        $partnerIncome = (int) $user->partner_income_in_cents;
+        $ownShare = $ownIncome / ($ownIncome + $partnerIncome);
+        $ownShareInCents = (int) round($expenseInCents * $ownShare);
+
+        return [
+            'partner_name' => $user->partner_name,
+            'own_income_in_cents' => $ownIncome,
+            'partner_income_in_cents' => $partnerIncome,
+            'own_share_percentage' => round($ownShare * 100, 1),
+            'own_share_in_cents' => $ownShareInCents,
+            'partner_share_in_cents' => $expenseInCents - $ownShareInCents,
+        ];
     }
 }

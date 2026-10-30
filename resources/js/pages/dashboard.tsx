@@ -1,40 +1,52 @@
-import { Head, Link, usePage } from '@inertiajs/react';
-import { TrendingDown, TrendingUp, Wallet, Lock } from 'lucide-react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import {
+    Gauge,
+    Lock,
+    Target,
+    TrendingDown,
+    TrendingUp,
+    Users,
+    Wallet,
+} from 'lucide-react';
 import { AmountDisplay } from '@/components/amount-display';
 import { CategoryPieChart } from '@/components/category-pie-chart';
+import { MonthSelector } from '@/components/month-selector';
 import { MonthlyChart } from '@/components/monthly-chart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { formatCurrency } from '@/lib/currency';
+import { cn } from '@/lib/utils';
+import { dashboard } from '@/routes';
+import * as billing from '@/routes/billing';
+import { edit as editCoupleSplit } from '@/routes/couple-split';
+import goalsRoute from '@/routes/goals';
+import * as transactions from '@/routes/transactions';
 import type {
     BreadcrumbItem,
     CategoryBreakdown,
+    CoupleSplit,
+    Goal,
     MonthlySummary,
     Transaction,
 } from '@/types';
-import { dashboard } from '@/routes';
-import * as billing from '@/routes/billing';
-import * as transactions from '@/routes/transactions';
 
 interface DashboardProps {
+    selectedMonth: string;
+    currentMonth: string;
     totalIncomeInCents: number;
     totalExpenseInCents: number;
     netBalanceInCents: number;
     recentTransactions: Transaction[];
     monthlySummary: MonthlySummary[] | null;
     categoryBreakdown: CategoryBreakdown[] | null;
+    coupleSplit: CoupleSplit | null;
+    goals: Goal[];
     isPaidPlan: boolean;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard.url() },
 ];
-
-const now = new Date();
-const currentMonth = now.toLocaleDateString('pt-BR', {
-    month: 'long',
-    year: 'numeric',
-});
 
 function UpgradePrompt() {
     return (
@@ -59,12 +71,16 @@ function UpgradePrompt() {
 }
 
 export default function Dashboard({
+    selectedMonth,
+    currentMonth,
     totalIncomeInCents,
     totalExpenseInCents,
     netBalanceInCents,
     recentTransactions,
     monthlySummary,
     categoryBreakdown,
+    coupleSplit,
+    goals,
     isPaidPlan,
 }: DashboardProps) {
     const { auth } = usePage().props;
@@ -77,20 +93,38 @@ export default function Dashboard({
                       100,
               )
             : 0;
+    const commitmentRate =
+        totalIncomeInCents > 0
+            ? (totalExpenseInCents / totalIncomeInCents) * 100
+            : null;
+
+    function changeMonth(month: string) {
+        router.get(
+            dashboard.url({
+                query: { month: month === currentMonth ? undefined : month },
+            }),
+            {},
+            { preserveScroll: true, preserveState: true },
+        );
+    }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
             <div className="flex flex-col gap-6 p-4 lg:p-6">
                 {/* Header */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                         <h1 className="text-2xl font-bold">
                             Olá, {firstName} 👋
                         </h1>
-                        <p className="text-sm text-muted-foreground capitalize">
-                            {currentMonth}
-                        </p>
+                        <div className="-ml-2">
+                            <MonthSelector
+                                month={selectedMonth}
+                                currentMonth={currentMonth}
+                                onChange={changeMonth}
+                            />
+                        </div>
                     </div>
                     <Link
                         href={transactions.index.url()}
@@ -101,7 +135,7 @@ export default function Dashboard({
                 </div>
 
                 {/* Stat cards */}
-                <div className="grid gap-4 sm:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <Card className="overflow-hidden border-0 bg-emerald-500/10 ring-1 ring-emerald-500/20">
                         <CardContent className="p-5">
                             <div className="mb-3 flex items-center justify-between">
@@ -118,7 +152,7 @@ export default function Dashboard({
                                 className="text-2xl font-bold"
                             />
                             <p className="mt-1 text-xs text-muted-foreground">
-                                este mês
+                                no mês
                             </p>
                         </CardContent>
                     </Card>
@@ -190,6 +224,8 @@ export default function Dashboard({
                             </p>
                         </CardContent>
                     </Card>
+
+                    <CommitmentCard rate={commitmentRate} />
                 </div>
 
                 {/* Charts */}
@@ -283,6 +319,14 @@ export default function Dashboard({
                     </Card>
                 </div>
 
+                <div className="grid gap-4 lg:grid-cols-2">
+                    <CoupleSplitCard
+                        coupleSplit={coupleSplit}
+                        totalExpenseInCents={totalExpenseInCents}
+                    />
+                    <GoalsCard goals={goals} />
+                </div>
+
                 {/* Recent transactions */}
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-3">
@@ -300,7 +344,7 @@ export default function Dashboard({
                         {recentTransactions.length === 0 ? (
                             <div className="py-12 text-center">
                                 <p className="text-sm text-muted-foreground">
-                                    Nenhuma transação registrada ainda.
+                                    Nenhuma transação neste mês.
                                 </p>
                                 <Link
                                     href={transactions.index.url()}
@@ -376,5 +420,238 @@ export default function Dashboard({
                 </Card>
             </div>
         </AppLayout>
+    );
+}
+
+function CommitmentCard({ rate }: { rate: number | null }) {
+    const tone =
+        rate === null
+            ? 'neutral'
+            : rate > 90
+              ? 'danger'
+              : rate > 70
+                ? 'warning'
+                : 'ok';
+
+    const styles = {
+        neutral: {
+            card: 'bg-muted/40 ring-border',
+            label: 'text-muted-foreground',
+            icon: 'bg-muted text-muted-foreground',
+            bar: 'bg-muted-foreground',
+        },
+        ok: {
+            card: 'bg-emerald-500/10 ring-emerald-500/20',
+            label: 'text-emerald-600 dark:text-emerald-400',
+            icon: 'bg-emerald-500/20 text-emerald-500',
+            bar: 'bg-emerald-500',
+        },
+        warning: {
+            card: 'bg-amber-500/10 ring-amber-500/20',
+            label: 'text-amber-600 dark:text-amber-400',
+            icon: 'bg-amber-500/20 text-amber-500',
+            bar: 'bg-amber-500',
+        },
+        danger: {
+            card: 'bg-red-500/10 ring-red-500/20',
+            label: 'text-red-600 dark:text-red-400',
+            icon: 'bg-red-500/20 text-red-500',
+            bar: 'bg-red-500',
+        },
+    }[tone];
+
+    return (
+        <Card className={cn('overflow-hidden border-0 ring-1', styles.card)}>
+            <CardContent className="p-5">
+                <div className="mb-3 flex items-center justify-between">
+                    <span
+                        className={cn(
+                            'text-xs font-medium tracking-wide uppercase',
+                            styles.label,
+                        )}
+                    >
+                        Comprometimento
+                    </span>
+                    <div
+                        className={cn(
+                            'flex size-8 items-center justify-center rounded-full',
+                            styles.icon,
+                        )}
+                    >
+                        <Gauge className="size-4" />
+                    </div>
+                </div>
+                <p className="text-2xl font-bold tabular-nums">
+                    {rate === null
+                        ? '—'
+                        : `${rate.toFixed(1).replace('.', ',')}%`}
+                </p>
+                <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-background/60">
+                    <div
+                        className={cn('h-full rounded-full', styles.bar)}
+                        style={{ width: `${Math.min(100, rate ?? 0)}%` }}
+                    />
+                </div>
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                    {rate === null
+                        ? 'sem receitas no mês'
+                        : 'das receitas vai para despesas'}
+                </p>
+            </CardContent>
+        </Card>
+    );
+}
+
+function CoupleSplitCard({
+    coupleSplit,
+    totalExpenseInCents,
+}: {
+    coupleSplit: CoupleSplit | null;
+    totalExpenseInCents: number;
+}) {
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+                <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+                    <Users className="size-4 text-muted-foreground" />
+                    Rateio do casal
+                </CardTitle>
+                <Link
+                    href={editCoupleSplit.url()}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                    {coupleSplit ? 'Ajustar →' : 'Configurar →'}
+                </Link>
+            </CardHeader>
+            <CardContent>
+                {coupleSplit ? (
+                    <div className="space-y-4">
+                        <p className="text-sm text-muted-foreground">
+                            Dividindo{' '}
+                            <span className="font-semibold text-foreground">
+                                {formatCurrency(totalExpenseInCents)}
+                            </span>{' '}
+                            de despesas proporcionalmente à renda:
+                        </p>
+                        <div className="flex h-3 w-full overflow-hidden rounded-full">
+                            <div
+                                className="h-full bg-blue-500"
+                                style={{
+                                    width: `${coupleSplit.own_share_percentage}%`,
+                                }}
+                            />
+                            <div className="h-full flex-1 bg-violet-500" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div>
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                    <span className="size-2.5 rounded-full bg-blue-500" />
+                                    Você ·{' '}
+                                    {coupleSplit.own_share_percentage
+                                        .toFixed(1)
+                                        .replace('.', ',')}
+                                    %
+                                </div>
+                                <p className="mt-0.5 font-semibold tabular-nums">
+                                    {formatCurrency(
+                                        coupleSplit.own_share_in_cents,
+                                    )}
+                                </p>
+                            </div>
+                            <div className="text-right">
+                                <div className="flex items-center justify-end gap-1.5 text-xs text-muted-foreground">
+                                    <span className="size-2.5 rounded-full bg-violet-500" />
+                                    {coupleSplit.partner_name} ·{' '}
+                                    {(100 - coupleSplit.own_share_percentage)
+                                        .toFixed(1)
+                                        .replace('.', ',')}
+                                    %
+                                </div>
+                                <p className="mt-0.5 font-semibold tabular-nums">
+                                    {formatCurrency(
+                                        coupleSplit.partner_share_in_cents,
+                                    )}
+                                </p>
+                            </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                            Simulação considerando todas as despesas do mês como
+                            compartilhadas.
+                        </p>
+                    </div>
+                ) : (
+                    <div className="py-6 text-center">
+                        <p className="text-sm text-muted-foreground">
+                            Divida as despesas do mês proporcionalmente à renda
+                            de cada um.
+                        </p>
+                        <Link
+                            href={editCoupleSplit.url()}
+                            className="mt-3 inline-block text-sm font-medium text-emerald-500 hover:text-emerald-400"
+                        >
+                            Informar rendas →
+                        </Link>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    );
+}
+
+function GoalsCard({ goals }: { goals: Goal[] }) {
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+                <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+                    <Target className="size-4 text-muted-foreground" />
+                    Metas
+                </CardTitle>
+                <Link
+                    href={goalsRoute.index.url()}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                    Ver todas →
+                </Link>
+            </CardHeader>
+            <CardContent>
+                {goals.length === 0 ? (
+                    <div className="py-6 text-center">
+                        <p className="text-sm text-muted-foreground">
+                            Nenhuma meta cadastrada.
+                        </p>
+                        <Link
+                            href={goalsRoute.index.url()}
+                            className="mt-3 inline-block text-sm font-medium text-emerald-500 hover:text-emerald-400"
+                        >
+                            Criar uma meta →
+                        </Link>
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        {goals.map((goal) => (
+                            <div key={goal.id} className="space-y-1.5">
+                                <div className="flex items-center justify-between gap-2 text-sm">
+                                    <span className="truncate font-medium">
+                                        {goal.name}
+                                    </span>
+                                    <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+                                        {formatCurrency(goal.saved_in_cents)} de{' '}
+                                        {formatCurrency(goal.target_in_cents)}
+                                    </span>
+                                </div>
+                                <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                                    <div
+                                        className="h-full rounded-full bg-emerald-500 transition-all"
+                                        style={{
+                                            width: `${goal.percentage}%`,
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </CardContent>
+        </Card>
     );
 }

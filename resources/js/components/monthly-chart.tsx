@@ -35,11 +35,11 @@ export function MonthlyChart({ data }: MonthlyChartProps) {
                 {data.map((item) => (
                     <div
                         key={item.month}
-                        className="group flex flex-1 flex-col items-center gap-1"
+                        className="group flex h-full flex-1 flex-col items-center gap-1"
                     >
-                        <div className="flex w-full flex-1 items-end gap-0.5">
+                        <div className="flex min-h-0 w-full flex-1 items-end gap-0.5">
                             <div
-                                className="relative flex-1"
+                                className="relative flex h-full flex-1 items-end"
                                 title={`Receitas: ${formatCurrency(item.income_in_cents)}`}
                             >
                                 <div
@@ -54,7 +54,7 @@ export function MonthlyChart({ data }: MonthlyChartProps) {
                                 />
                             </div>
                             <div
-                                className="relative flex-1"
+                                className="relative flex h-full flex-1 items-end"
                                 title={`Despesas: ${formatCurrency(item.expense_in_cents)}`}
                             >
                                 <div
