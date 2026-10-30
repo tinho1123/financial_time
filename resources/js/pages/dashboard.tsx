@@ -1,19 +1,20 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { TrendingDown, TrendingUp, Wallet, Lock } from 'lucide-react';
 import { AmountDisplay } from '@/components/amount-display';
+import { CategoryPieChart } from '@/components/category-pie-chart';
 import { MonthlyChart } from '@/components/monthly-chart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { formatCurrency } from '@/lib/currency';
-import { dashboard } from '@/routes';
-import * as billing from '@/routes/billing';
-import * as transactions from '@/routes/transactions';
 import type {
     BreadcrumbItem,
     CategoryBreakdown,
     MonthlySummary,
     Transaction,
 } from '@/types';
+import { dashboard } from '@/routes';
+import * as billing from '@/routes/billing';
+import * as transactions from '@/routes/transactions';
 
 interface DashboardProps {
     totalIncomeInCents: number;
@@ -221,48 +222,58 @@ export default function Dashboard({
                                         Nenhuma despesa registrada este mês.
                                     </p>
                                 ) : (
-                                    <div className="space-y-3">
-                                        {categoryBreakdown.map((item) => (
-                                            <div
-                                                key={item.category_name}
-                                                className="space-y-1.5"
-                                            >
-                                                <div className="flex items-center justify-between text-sm">
-                                                    <div className="flex items-center gap-2">
-                                                        <span
-                                                            className="size-3 rounded-full"
+                                    <div className="space-y-5">
+                                        <CategoryPieChart
+                                            data={categoryBreakdown}
+                                        />
+                                        <div className="space-y-3">
+                                            {categoryBreakdown.map((item) => (
+                                                <div
+                                                    key={item.category_name}
+                                                    className="space-y-1.5"
+                                                >
+                                                    <div className="flex items-center justify-between text-sm">
+                                                        <div className="flex items-center gap-2">
+                                                            <span
+                                                                className="size-3 rounded-full"
+                                                                style={{
+                                                                    backgroundColor:
+                                                                        item.color,
+                                                                }}
+                                                            />
+                                                            <span className="font-medium">
+                                                                {
+                                                                    item.category_name
+                                                                }
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-xs text-muted-foreground">
+                                                                {
+                                                                    item.percentage
+                                                                }
+                                                                %
+                                                            </span>
+                                                            <span className="font-semibold">
+                                                                {formatCurrency(
+                                                                    item.total_in_cents,
+                                                                )}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                                                        <div
+                                                            className="h-full rounded-full transition-all duration-500"
                                                             style={{
+                                                                width: `${item.percentage}%`,
                                                                 backgroundColor:
                                                                     item.color,
                                                             }}
                                                         />
-                                                        <span className="font-medium">
-                                                            {item.category_name}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-xs text-muted-foreground">
-                                                            {item.percentage}%
-                                                        </span>
-                                                        <span className="font-semibold">
-                                                            {formatCurrency(
-                                                                item.total_in_cents,
-                                                            )}
-                                                        </span>
                                                     </div>
                                                 </div>
-                                                <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                                                    <div
-                                                        className="h-full rounded-full transition-all duration-500"
-                                                        style={{
-                                                            width: `${item.percentage}%`,
-                                                            backgroundColor:
-                                                                item.color,
-                                                        }}
-                                                    />
-                                                </div>
-                                            </div>
-                                        ))}
+                                            ))}
+                                        </div>
                                     </div>
                                 )
                             ) : (
