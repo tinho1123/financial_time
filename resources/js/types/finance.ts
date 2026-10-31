@@ -128,3 +128,21 @@ export type PaginatedTransactions = {
     total: number;
     links: { url: string | null; label: string; active: boolean }[];
 };
+
+export type Goal = {
+    id: number;
+    name: string;
+    target_in_cents: number;
+    saved_in_cents: number;
+    deadline: string | null;
+    percentage: number;
+};
+
+export type CoupleSplit = {
+    partner_name: string;
+    own_income_in_cents: number;
+    partner_income_in_cents: number;
+    own_share_percentage: number;
+    own_share_in_cents: number;
+    partner_share_in_cents: number;
+};

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Settings\CoupleSplitController;
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\TwoFactorAuthenticationController;
@@ -20,6 +21,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('settings/password', [PasswordController::class, 'update'])
         ->middleware('throttle:6,1')
         ->name('user-password.update');
+
+    Route::get('settings/couple-split', [CoupleSplitController::class, 'edit'])->name('couple-split.edit');
+    Route::put('settings/couple-split', [CoupleSplitController::class, 'update'])->name('couple-split.update');
 
     Route::inertia('settings/appearance', 'settings/appearance')->name('appearance.edit');
 

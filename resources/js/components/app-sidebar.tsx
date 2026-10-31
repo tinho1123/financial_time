@@ -5,6 +5,7 @@ import {
     PiggyBank,
     Repeat,
     Tag,
+    Target,
     Wallet,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
@@ -23,6 +24,7 @@ import { dashboard } from '@/routes';
 import accounts from '@/routes/accounts';
 import budgets from '@/routes/budgets';
 import categories from '@/routes/categories';
+import goals from '@/routes/goals';
 import recurringTransactions from '@/routes/recurring-transactions';
 import transactions from '@/routes/transactions';
 import type { NavItem } from '@/types';
@@ -47,6 +49,11 @@ const mainNavItems: NavItem[] = [
         title: 'Orçamentos',
         href: budgets.index.url(),
         icon: PiggyBank,
+    },
+    {
+        title: 'Metas',
+        href: goals.index.url(),
+        icon: Target,
     },
     {
         title: 'Categorias',
