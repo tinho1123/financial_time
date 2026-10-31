@@ -33,7 +33,6 @@ const ACCOUNT_TYPE_LABELS: Record<string, string> = {
     savings: 'Poupança',
     cash: 'Dinheiro',
     credit: 'Crédito',
-    investment: 'Investimento',
 };
 
 interface AccountFormProps {

@@ -2,6 +2,7 @@ import { Link } from '@inertiajs/react';
 import {
     ArrowLeftRight,
     LayoutGrid,
+    LineChart,
     PiggyBank,
     Repeat,
     Tag,
@@ -25,6 +26,7 @@ import accounts from '@/routes/accounts';
 import budgets from '@/routes/budgets';
 import categories from '@/routes/categories';
 import goals from '@/routes/goals';
+import investments from '@/routes/investments';
 import recurringTransactions from '@/routes/recurring-transactions';
 import transactions from '@/routes/transactions';
 import type { NavItem } from '@/types';
@@ -64,6 +66,11 @@ const mainNavItems: NavItem[] = [
         title: 'Contas',
         href: accounts.index.url(),
         icon: Wallet,
+    },
+    {
+        title: 'Investimentos',
+        href: investments.index.url(),
+        icon: LineChart,
     },
     // {
     //     title: 'Cobrança',
