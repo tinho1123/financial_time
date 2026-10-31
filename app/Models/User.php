@@ -123,10 +123,17 @@ class User extends Authenticatable
             return true;
         }
 
-        return $this->plan
-            && $this->plan->has_advanced_charts
-            && $this->plan_expires_at !== null
-            && $this->plan_expires_at->isFuture();
+        if (! $this->plan || ! $this->plan->has_advanced_charts) {
+            return false;
+        }
+
+        // No expiration date means the plan isn't a time-limited PIX purchase (e.g. it
+        // was assigned directly), so the current plan is honored without a deadline.
+        if ($this->plan_expires_at === null) {
+            return true;
+        }
+
+        return $this->plan_expires_at->isFuture();
     }
 
     public function canAddAccount(): bool
