@@ -13,7 +13,7 @@ class AccountFactory extends Factory
     public function definition(): array
     {
         $names = ['Nubank', 'Bradesco', 'Itaú', 'Caixa', 'Santander', 'Inter', 'C6 Bank'];
-        $types = ['checking', 'savings', 'cash', 'credit', 'investment'];
+        $types = ['checking', 'savings', 'cash', 'credit'];
 
         return [
             'user_id' => User::factory(),
@@ -21,5 +21,13 @@ class AccountFactory extends Factory
             'type' => fake()->randomElement($types),
             'initial_balance_in_cents' => fake()->numberBetween(0, 500000),
         ];
+    }
+
+    public function investment(): static
+    {
+        return $this->state([
+            'name' => fake()->randomElement(['Tesouro Selic', 'CDB Banco Inter', 'Ações XP']),
+            'type' => 'investment',
+        ]);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AccountType;
 use App\Http\Requests\Accounts\StoreAccountRequest;
 use App\Http\Requests\Accounts\UpdateAccountRequest;
 use App\Models\Account;
@@ -17,11 +18,15 @@ class AccountController extends Controller
 
     public function index(Request $request): Response
     {
-        $accounts = $request->user()->accounts()->orderBy('name')->get()->map(function (Account $account) {
-            return array_merge($account->toArray(), [
-                'current_balance_in_cents' => $account->currentBalanceInCents(),
-            ]);
-        });
+        $accounts = $request->user()->accounts()
+            ->where('type', '!=', AccountType::Investment)
+            ->orderBy('name')
+            ->get()
+            ->map(function (Account $account) {
+                return array_merge($account->toArray(), [
+                    'current_balance_in_cents' => $account->currentBalanceInCents(),
+                ]);
+            });
 
         return Inertia::render('accounts/index', [
             'accounts' => $accounts,

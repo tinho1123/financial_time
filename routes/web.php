@@ -7,6 +7,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GoalController;
+use App\Http\Controllers\InvestmentController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PixWebhookController;
 use App\Http\Controllers\RecurringTransactionController;
@@ -31,6 +32,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('recurring-transactions', RecurringTransactionController::class)->except(['show', 'create', 'edit']);
     Route::resource('categories', CategoryController::class)->except(['show', 'create', 'edit']);
     Route::resource('accounts', AccountController::class)->except(['show', 'create', 'edit']);
+    Route::resource('investments', InvestmentController::class)->except(['show', 'create', 'edit'])->parameters(['investments' => 'investment']);
     Route::resource('budgets', BudgetController::class)->except(['show', 'create', 'edit']);
     Route::post('goals/{goal}/contribute', [GoalController::class, 'contribute'])->name('goals.contribute');
     Route::resource('goals', GoalController::class)->except(['show', 'create', 'edit']);

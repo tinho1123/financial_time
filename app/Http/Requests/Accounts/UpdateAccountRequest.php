@@ -25,7 +25,7 @@ class UpdateAccountRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:100'],
-            'type' => ['required', 'string', Rule::in(['checking', 'savings', 'cash', 'credit', 'investment'])],
+            'type' => ['required', 'string', Rule::in(['checking', 'savings', 'cash', 'credit'])],
             'currency' => ['required', 'string', 'size:3'],
             'initial_balance_in_cents' => ['required', 'integer', 'min:-99999999999', 'max:99999999999'],
         ];
